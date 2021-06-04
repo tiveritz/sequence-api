@@ -1,4 +1,4 @@
-# How To's ![build-status](https://img.shields.io/docker/cloud/automated/tiveritz/how-tos-api) ![build-status](https://img.shields.io/docker/cloud/build/tiveritz/how-tos-api)
+# How To's
 This Project consists of a collection of Web Applications that allow you to manage, edit and view How To's in the form of Step-By-Step procedures. An important key aspect is the modularity of the documentation. Reusable steps, pictures, explanations, links are a core concept and the database is designed with that in mind.
 
 ### [Core API](https://github.com/tiveritz/how-tos-api)
