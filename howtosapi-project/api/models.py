@@ -9,7 +9,7 @@ class HowTo(models.Model):
 
     def uri_id(self):
         return str(HowToUriId.objects.get(pk = self.id))
-
+    
     def __str__(self):
         return f'{self.title}'
     

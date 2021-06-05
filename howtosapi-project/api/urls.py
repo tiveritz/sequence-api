@@ -1,14 +1,14 @@
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from rest_framework.views import APIView
-from rest_framework.response import Response
+from rest_framework.urlpatterns import format_suffix_patterns
 from api import views
 
 
-router = DefaultRouter()
-router.register(r'howtos', views.HowToViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-    path('statistics/', views.StatisticView.as_view(), name='statistics')
+    path('', views.APIRoot.as_view(), name = 'root'),
+    path('statistics/', views.StatisticView.as_view(), name = 'statistics'),
+    path('howtos/', views.HowToListView.as_view(), name = 'how-to-list'),
+    path('howtos/<int:pk>', views.HowToDetailView.as_view(), name = 'how-to-detail'),
 ]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
