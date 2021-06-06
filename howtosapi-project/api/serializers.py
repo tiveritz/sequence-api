@@ -10,7 +10,7 @@ class HowToSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = HowTo
-        fields = ('uri_id', 'title', 'created', 'updated', 'url')
+        fields = ('id', 'uri_id', 'title', 'created', 'updated', 'url')
     
     def create(self, validated_data):
         """
@@ -30,4 +30,8 @@ class HowToSerializer(serializers.HyperlinkedModelSerializer):
 class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = HowTo
-        fields = ('id', 'title', 'created', 'updated', 'description',)
+        fields = ('id', 'uri_id', 'title', 'created', 'updated', 'description')
+    
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)

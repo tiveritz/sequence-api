@@ -50,7 +50,6 @@ class HowToListView(APIView):
     def post(self, request, format=None):
         serializer = HowToSerializer(data = request.data, context={'request': request})
         if serializer.is_valid():
-            print('view was called')
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
@@ -63,3 +62,11 @@ class HowToDetailView(APIView):
         how_to = HowTo.objects.get(pk = pk)
         serializer = HowToDetailSerializer(how_to)
         return Response(serializer.data)
+    
+    def patch(self, request, pk):
+        how_to = HowTo.objects.get(pk = pk)
+        serializer = HowToDetailSerializer(how_to, data = request.data, partial = True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)

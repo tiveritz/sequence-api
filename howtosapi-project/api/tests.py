@@ -1,43 +1,47 @@
 import re
-from django.test import TestCase
-from api.models import HowTo, HowToUriId
-from api.uri_id_generator import generate
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
 
-class HowToTitleTestCase(TestCase):
-    def test_creation_of_how_to(self):
+
+class HowToTests(APITestCase):
+    def test_create_how_to(self):
         """
-        How To's are correctly saved
+        Ensure client can create a new How To
         """
-        normal_title = HowTo.objects.create(title = 'How to Write Test Cases')
-        empty_title = HowTo.objects.create(title = '')
+        url = reverse('how-to-list')
+        data = {'title' : 'How to Create a How To'}
+        response = self.client.post(url, data, format = 'json')
 
-        msg = 'How To has not been created correctly'
-        self.assertEqual(normal_title.title, 'How to Write Test Cases', msg)
-        self.assertEqual(empty_title.title, '', msg)
+        msg = 'HTTP status return code is not 201'
+        self.assertEqual(response.status_code,status.HTTP_201_CREATED, msg)
 
-class HowToUriIdTestCase(TestCase):
-    def test_auto_build_uri_id(self):
-        """
-        Uri Id's are correctly built, assigned to each How To and unique
-        """
+        msg = 'Created data is not correct'  
+        self.assertEqual(response.data['title'], data['title'], msg)
 
-        # Automatic creation does not work here, because this is done by
-        # the API framework serializer
-        how_to = HowTo.objects.create()
-        uri_id = generate(how_to.id)
-        how_to_uri_id = HowToUriId(
-            uri_id = uri_id,
-            how_to_id = how_to
-        )
-        how_to_uri_id.save()
-
-        uri_id = HowToUriId.objects.get(pk = how_to.id) # Get from db
-
+        msg = 'Uri ID was not created correctly'
         # Matches any word with lower letters, numbers with a exact length of
         # 8 characters
+        #pattern = re.compile(r'^[a-z0-9]{8}$')
         pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = True if re.match(pattern, str(uri_id)) else False
+        is_match = re.match(pattern, str(response.data['uri_id'])) or False
+        self.assertTrue(is_match, msg)
+    
+    def test_update_how_to(self):
+        """
+        Ensure client can update How To
+        """
+        url = reverse('how-to-list')
+        data = {'title' : 'Update a How To'}
+        response = self.client.post(url, data, format = 'json')
+        
+        url = reverse('how-to-detail', args = [response.data['id']])
+        data = {'title' : 'New Title'}
+        response = self.client.patch(url, data, format = 'json')
 
-        msg_1 = 'How To Uri Id has not been created correctly'
-        self.assertTrue(is_match, msg_1)
+        msg = 'HTTP status return code is not 200'
+        self.assertEqual(response.status_code,status.HTTP_200_OK, msg)
+
+        msg = 'Change title failed'  
+        self.assertEqual(response.data['title'], data['title'], msg)
 
