@@ -4,13 +4,18 @@ from api.uri_id_generator import generate
 
 
 class HowToSerializer(serializers.HyperlinkedModelSerializer): 
+    uri_id = serializers.SlugRelatedField(
+        read_only = True,
+        slug_field = 'uri_id',
+        )
     url = serializers.HyperlinkedIdentityField(
         view_name = 'how-to-detail',
-    )
+        lookup_field = 'uri_id',
+        )
 
     class Meta:
         model = HowTo
-        fields = ('id', 'uri_id', 'title', 'created', 'updated', 'url')
+        fields = ('uri_id', 'title', 'created', 'updated', 'url')
     
     def create(self, validated_data):
         """
@@ -27,10 +32,16 @@ class HowToSerializer(serializers.HyperlinkedModelSerializer):
 
         return how_to
 
+
 class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
+    uri_id = serializers.SlugRelatedField(
+        read_only = True,
+        slug_field = 'uri_id',
+        )
+
     class Meta:
         model = HowTo
-        fields = ('id', 'uri_id', 'title', 'created', 'updated', 'description')
+        fields = ('uri_id', 'title', 'created', 'updated', 'description')
     
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True

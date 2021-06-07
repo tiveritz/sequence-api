@@ -58,13 +58,14 @@ class HowToDetailView(APIView):
     """
     View to How To with it's content
     """
-    def get(self, request, pk):
-        how_to = HowTo.objects.get(pk = pk)
+    def get(self, request, uri_id):
+        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
         serializer = HowToDetailSerializer(how_to)
         return Response(serializer.data)
+        #return Response({'uri_id' : uri_id})
     
-    def patch(self, request, pk):
-        how_to = HowTo.objects.get(pk = pk)
+    def patch(self, request, uri_id):
+        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
         serializer = HowToDetailSerializer(how_to, data = request.data, partial = True)
         if serializer.is_valid():
             serializer.save()
