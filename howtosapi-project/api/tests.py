@@ -5,6 +5,7 @@ from rest_framework.test import APITestCase
 
 
 class HowToTests(APITestCase):
+    
     def test_create_how_to(self):
         """
         Ensure client can create a new How To
@@ -48,15 +49,43 @@ class HowToTests(APITestCase):
         """
         url = reverse('how-to-list')
         data = {'title' : 'Update a How To'}
-        response = self.client.post(url, data, format = 'json')
+        response_post = self.client.post(url, data, format = 'json')
         
-        url = reverse('how-to-detail', args = [response.data['uri_id']])
-        data = {'title' : 'New Title', 'description' : 'New Description'}
-        response = self.client.patch(url, data, format = 'json')
+        url = reverse('how-to-detail', args = [response_post.data['uri_id']])
+        status_msg = 'HTTP status return code is not 200'
+        data = {
+            'title' : 'New Title',
+            'description' : 'New Description',
+        }
 
-        msg = 'HTTP status return code is not 200'
-        self.assertEqual(response.status_code,status.HTTP_200_OK, msg)
+        for k, v in data.items():
+            change_data = {k : v}
+            response_patch = self.client.patch(url, change_data, format = 'json')
 
-        msg = 'Change title failed'  
-        self.assertEqual(response.data['title'], data['title'], msg)
+            self.assertEqual(response_patch.status_code, status.HTTP_200_OK, status_msg)
+
+            msg = f'Updating {k} failed'
+            self.assertEqual(response_patch.data[k], data[k], msg)
+        
+    def test_forbidden_updates(self):
+        """
+        Ensure client can not change read only fields
+        """
+        url = reverse('how-to-list')
+        data = {'title' : 'Forbidden update'}
+        response_post = self.client.post(url, data, format = 'json')
+
+        url = reverse('how-to-detail', args = [response_post.data['uri_id']])
+        
+        data = {
+            'uri_id' : 'lolololo',
+            'created' : 'lol',
+        }
+
+        for k, v in data.items():
+            forbidden_data = {k : v}
+            response_patch = self.client.patch(url, forbidden_data, format = 'json')
+
+            msg = f'Forbidden update on {k} was not blocked'
+            self.assertEqual(response_post.data[k], response_patch.data[k], msg)
 
