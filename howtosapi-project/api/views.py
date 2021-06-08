@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework import status
 
-from api.models import HowTo, HowToUriId
-from api.serializers import HowToSerializer, HowToDetailSerializer
+from api.models import HowTo, Step
+from api.serializers import HowToSerializer, HowToDetailSerializer, StepSerializer, StepDetailSerializer
 
 
 class APIRoot(APIView):
@@ -12,6 +12,7 @@ class APIRoot(APIView):
         return Response({
             'statistics' : reverse('statistics', request = request),
             'howtos' : reverse('how-to-list', request = request),
+            'steps' : reverse('step-list', request = request),
         })
 
 class StatisticView(APIView):
@@ -60,13 +61,49 @@ class HowToDetailView(APIView):
     """
     def get(self, request, uri_id):
         how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
-        serializer = HowToDetailSerializer(how_to)
+        serializer = HowToDetailSerializer(how_to, context = {'request' : request})
         return Response(serializer.data)
-        #return Response({'uri_id' : uri_id})
     
     def patch(self, request, uri_id):
         how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
-        serializer = HowToDetailSerializer(how_to, data = request.data, partial = True)
+        serializer = HowToDetailSerializer(how_to, data = request.data, partial = True, context = {'request' : request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_200_OK)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+class StepListView(APIView):
+    """
+    View to Steps
+    """
+    def get(self, request):
+        steps = Step.objects.all().order_by('-updated')
+        serializer = StepSerializer(
+            steps,
+            many = True,
+            context = {'request' : request}
+            )
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = StepSerializer(data = request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
+class StepDetailView(APIView):
+    """
+    View to Step with it's content
+    """
+    def get(self, request, uri_id):
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        serializer = StepDetailSerializer(step)
+        return Response(serializer.data)
+    
+    def patch(self, request, uri_id):
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        serializer = StepDetailSerializer(step, data = request.data, partial = True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_200_OK)

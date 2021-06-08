@@ -1,7 +1,10 @@
 from django.contrib import admin
 
 
-from .models import HowTo, HowToUriId
+from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep
 
 admin.site.register(HowTo)
 admin.site.register(HowToUriId)
+admin.site.register(Step)
+admin.site.register(StepUriId)
+admin.site.register(HowToStep)
