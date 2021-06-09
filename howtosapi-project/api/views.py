@@ -4,7 +4,7 @@ from rest_framework.reverse import reverse
 from rest_framework import status
 
 from api.models import HowTo, Step
-from api.serializers import HowToSerializer, HowToDetailSerializer, StepSerializer, StepDetailSerializer
+from api.serializers import HowToSerializer, HowToDetailSerializer, StepSerializer, StepDetailSerializer, HowToStepSerializer
 
 
 class APIRoot(APIView):
@@ -48,8 +48,8 @@ class HowToListView(APIView):
             )
         return Response(serializer.data)
     
-    def post(self, request, format=None):
-        serializer = HowToSerializer(data = request.data, context={'request': request})
+    def post(self, request, format = None):
+        serializer = HowToSerializer(data = request.data, context = {'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)
@@ -72,6 +72,19 @@ class HowToDetailView(APIView):
             return Response(serializer.data, status = status.HTTP_200_OK)
         return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
 
+class HowToStepView(APIView):
+    """
+    View to Steps of a How To
+    """
+    def post(self, request, uri_id, format = None):
+        data = request.data
+        data['how_to_uri_id'] = uri_id
+        serializer = HowToStepSerializer(data = data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status = status.HTTP_201_CREATED)
+        return Response(serializer.errors, status = status.HTTP_400_BAD_REQUEST)
+
 class StepListView(APIView):
     """
     View to Steps
@@ -85,8 +98,8 @@ class StepListView(APIView):
             )
         return Response(serializer.data)
 
-    def post(self, request, format=None):
-        serializer = StepSerializer(data = request.data, context={'request': request})
+    def post(self, request, format = None):
+        serializer = StepSerializer(data = request.data, context = {'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status = status.HTTP_201_CREATED)

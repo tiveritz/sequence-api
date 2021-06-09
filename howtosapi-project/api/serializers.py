@@ -76,25 +76,38 @@ class StepDetailSerializer(serializers.ModelSerializer):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
 
-class HowToStepField(serializers.ModelSerializer):
-    def to_representation(self, value):
+class HowToStepSerializer(serializers.Serializer):
+    uri_id = serializers.CharField(max_length = 8)
+    how_to_uri_id = serializers.CharField(max_length = 8)
 
-        data = {
-            'title' : value.step_id.title,
-            'description' : value.step_id.description,
-            }
-        return data
+    def create(self, validated_data):
+        """
+        Link a step to a How To
+        """
+        how_to_uri_id = validated_data['how_to_uri_id']
+        step_uri_id = validated_data['uri_id']
+        print(how_to_uri_id, step_uri_id)
+
+        if False:
+            raise serializers.ValidationError("Step already linked to How To. Duplicates not allowed")
+
+        return self
+
 
 class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
     uri_id = serializers.SlugRelatedField(
         read_only = True,
         slug_field = 'uri_id',
         )
+    steps_url = serializers.HyperlinkedIdentityField(
+        view_name = 'how-to-step',
+        lookup_field = 'uri_id',
+        )
     steps = StepSerializer(many = True, read_only = True)
 
     class Meta:
         model = HowTo
-        fields = ('uri_id', 'title', 'created', 'updated', 'description', 'steps')
+        fields = ('uri_id', 'title', 'created', 'updated', 'description', 'steps_url', 'steps')
     
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
