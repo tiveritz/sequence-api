@@ -24,9 +24,9 @@ class StatisticView(APIView):
         Return statisitcal data
         """
         how_tos_count = HowTo.objects.count()
-        steps_count = 34
-        supersteps_count = 34
-        substeps_count = 34
+        steps_count = Step.objects.count()
+        supersteps_count = 0
+        substeps_count = 0
         
         return Response({
             'how_tos' : how_tos_count,

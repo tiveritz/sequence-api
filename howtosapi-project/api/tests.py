@@ -5,7 +5,6 @@ from rest_framework.test import APITestCase
 
 
 class HowToTests(APITestCase):
-    
     def test_create_how_to(self):
         """
         Ensure client can create a new How To
@@ -91,7 +90,6 @@ class HowToTests(APITestCase):
 
 
 class StepTest(APITestCase):
-    
     def test_create_step(self):
         """
         Ensure client can create a new Step
@@ -128,7 +126,7 @@ class StepTest(APITestCase):
         msg = 'Retreiving Step by Uri ID failed'  
         self.assertEqual(response_post.data['title'], data['title'], msg)
 
-    def test_update_how_to(self):
+    def test_update_step(self):
         """
         Ensure client can update Step
         """
@@ -173,3 +171,30 @@ class StepTest(APITestCase):
 
             msg = f'Forbidden update on {k} was not blocked'
             self.assertEqual(response_post.data[k], response_patch.data[k], msg)
+    
+class HowToStepTest(APITestCase):
+    def test_link_step_to_how_to(self):
+        """
+        Ensure client can link a Step to a How to
+        """
+        # Create a How To
+        url = reverse('how-to-list')
+        data = {'title' : 'Linkable How To'}
+        how_to = self.client.post(url, data, format = 'json')
+        
+        # Create a Step
+        url = reverse('step-list')
+        data = {'title' : 'Step to link'}
+        step = self.client.post(url, data, format = 'json')
+
+        # Link Step to How To
+        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        data = {'uri_id' : step.data['uri_id']}
+        link_step = self.client.post(url, data, format = 'json')
+
+        # Check if Step was correctly linked
+        url = reverse('how-to-detail', args = [how_to.data['uri_id']])
+        response = self.client.get(url, format = 'json')
+
+        msg = 'Step was not linked to How To correctly'
+        self.assertEqual(response.data['steps'][0]['uri_id'], step.data['uri_id'], msg)

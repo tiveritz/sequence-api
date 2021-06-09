@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep
 from api.uri_id_generator import generate
 from rest_framework import generics
+from django.db.models import Max
 
 
 class HowToSerializer(serializers.HyperlinkedModelSerializer): 
@@ -86,12 +87,20 @@ class HowToStepSerializer(serializers.Serializer):
         """
         how_to_uri_id = validated_data['how_to_uri_id']
         step_uri_id = validated_data['uri_id']
-        print(how_to_uri_id, step_uri_id)
+        
+        how_to = HowTo.objects.get(howtouriid__uri_id = how_to_uri_id)
+        step = Step.objects.get(stepuriid__uri_id = step_uri_id)
+        how_to_max_pos = HowToStep.objects.filter(how_to_id = how_to).aggregate(Max('pos'))
+        pos = how_to_max_pos['pos__max']
+        
+        new_pos = pos + 1 if pos else 0
+
+        how_to_step = HowToStep.objects.create(how_to_id = how_to, step_id = step, pos = new_pos)
 
         if False:
             raise serializers.ValidationError("Step already linked to How To. Duplicates not allowed")
 
-        return self
+        return how_to_step
 
 
 class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
@@ -112,3 +121,9 @@ class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
+
+'''
+{
+    "uri_id": "e4729b49"
+}
+'''
