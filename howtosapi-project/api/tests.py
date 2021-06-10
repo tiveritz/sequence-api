@@ -173,9 +173,9 @@ class StepTest(APITestCase):
             self.assertEqual(response_post.data[k], response_patch.data[k], msg)
     
 class HowToStepTest(APITestCase):
-    def test_link_step_to_how_to(self):
+    def test_link_unlink_step_to_how_to(self):
         """
-        Ensure client can link a Step to a How to
+        Ensure client can link a Step to a How to, then delete it
         """
         # Create a How To
         url = reverse('how-to-list')
@@ -190,7 +190,7 @@ class HowToStepTest(APITestCase):
         # Link Step to How To
         url = reverse('how-to-step', args = [how_to.data['uri_id']])
         data = {'uri_id' : step.data['uri_id']}
-        link_step = self.client.post(url, data, format = 'json')
+        self.client.post(url, data, format = 'json')
 
         # Check if Step was correctly linked
         url = reverse('how-to-detail', args = [how_to.data['uri_id']])
@@ -198,3 +198,14 @@ class HowToStepTest(APITestCase):
 
         msg = 'Step was not linked to How To correctly'
         self.assertEqual(response.data['steps'][0]['uri_id'], step.data['uri_id'], msg)
+
+        # Unlink step
+        url = reverse('how-to-step-detail', args = [how_to.data['uri_id'], step.data['uri_id']])
+        response = self.client.delete(url, format = 'json')
+
+        # Check if Step was correctly unlinked
+        url = reverse('how-to-detail', args = [how_to.data['uri_id']])
+        response = self.client.get(url, format = 'json')
+
+        msg = 'Step was not unlinked to How To correctly'
+        self.assertFalse(len(response.data['steps']), msg)

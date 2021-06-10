@@ -14,7 +14,8 @@ class HowTo(models.Model):
     
     @property
     def steps(self):
-        step_ids = HowToStep.objects.filter(how_to_id = self.id).values_list('step_id', flat = True)
+        how_to_steps = HowToStep.objects.filter(how_to_id = self.id)
+        step_ids = how_to_steps.values_list('step_id', flat = True)
         return Step.objects.filter(id__in = step_ids).order_by('step__pos')
     
     def __str__(self):
@@ -49,6 +50,12 @@ class Step(models.Model):
     @property
     def uri_id(self):
         return StepUriId.objects.get(step_id = self)
+
+    @property
+    def substeps(self):
+        substeps = Super.objects.filter(super_id = self.id)
+        step_ids = substeps.values_list('step_id', flat = True)
+        return Step.objects.filter(id__in = step_ids).order_by('substep__pos')
 
     def __str__(self):
         return f'{self.title}'
@@ -85,3 +92,22 @@ class HowToStep(models.Model):
 
     def __str__(self):
         return f'How To {self.how_to_id.uri_id} -> Step {self.step_id.uri_id}: pos {self.pos}'
+
+class Super(models.Model):
+    super_id = models.ForeignKey(
+        Step,
+        on_delete = models.CASCADE,
+        related_name = 'superstep'
+        )
+    step_id = models.ForeignKey(
+        Step,
+        on_delete = models.CASCADE,
+        related_name = 'substep'
+        )
+    pos = models.IntegerField()
+
+    class Meta:
+        verbose_name = 'Superstep'
+
+    def __str__(self):
+        return f'Super {self.super_id.uri_id} -> Step {self.step_id.uri_id}: pos {self.pos}'

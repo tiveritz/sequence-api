@@ -10,8 +10,10 @@ urlpatterns = [
     path('howtos/', views.HowToListView.as_view(), name = 'how-to-list'),
     path('howtos/<str:uri_id>/', views.HowToDetailView.as_view(), name = 'how-to-detail'),
     path('howtos/<str:uri_id>/steps', views.HowToStepView.as_view(), name = 'how-to-step'),
+    path('howtos/<str:uri_id>/steps/<str:step_uri_id>/', views.HowToStepDetailView.as_view(), name = 'how-to-step-detail'),
     path('steps/', views.StepListView.as_view(), name = 'step-list'),
     path('steps/<str:uri_id>/', views.StepDetailView.as_view(), name = 'step-detail'),
+    path('steps/<str:uri_id>/steps', views.SubstepView.as_view(), name = 'sub-step'),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
