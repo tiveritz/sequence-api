@@ -145,6 +145,33 @@ class HowToStepDetailView(APIView):
                                  step_id = step.id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
+class HowToLinkableView(APIView):
+    """
+    View to Steps that can be linked to a How To
+    """
+    def get(self, request, uri_id):
+        # Can not be linked to this How To already
+        forbidden_steps = HowTo.objects.get(howtouriid__uri_id = uri_id).steps
+        steps = Step.objects.exclude(id__in = forbidden_steps)
+
+
+        serializer = StepSimpleSerializer(steps,
+                                          many = True,
+                                          context = {'request' : request})
+        return Response(serializer.data,
+                        status = status.HTTP_200_OK)
+
+class SuperDetailView(APIView):
+    """
+    View to Steps of a How To
+    """
+    def delete(self, request, uri_id, step_uri_id):
+        super = StepUriId.objects.get(uri_id = uri_id)
+        step = StepUriId.objects.get(uri_id = step_uri_id)
+        Super.objects.filter(super_id = super.id,
+                             step_id = step.id).delete()
+        return Response(status = status.HTTP_204_NO_CONTENT)
+
 class StepListView(APIView):
     """
     View to Steps
@@ -194,3 +221,23 @@ class StepDetailView(APIView):
     def delete(self, request, uri_id):
         Step.objects.get(stepuriid__uri_id = uri_id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
+
+class StepLinkableView(APIView):
+    """
+    View to Steps that can be linked to a How To
+    """
+    def get(self, request, uri_id):
+        # Can not link itself
+        self_id = Step.objects.get(stepuriid__uri_id = uri_id).id
+
+        # Can not link a Substep of this Step
+        forbidden_substeps = Step.objects.get(stepuriid__uri_id = uri_id).substeps
+        
+        
+        steps = Step.objects.exclude(id = self_id).exclude(id__in = forbidden_substeps)
+
+        serializer = StepSimpleSerializer(steps,
+                                          many = True,
+                                          context = {'request' : request})
+        return Response(serializer.data,
+                        status = status.HTTP_200_OK)

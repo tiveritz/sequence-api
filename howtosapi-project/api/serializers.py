@@ -57,16 +57,24 @@ class StepSerializer(serializers.HyperlinkedModelSerializer):
 
         return step
 
+class RecursiveField(serializers.Serializer):
+	# Source: https://programmersought.com/article/62131194762/
+    def to_representation(self, value):
+        serializer = self.parent.parent.__class__(value, context=self.context)
+        return serializer.data
+
 class StepSimpleSerializer(serializers.HyperlinkedModelSerializer): 
     uri_id = serializers.SlugRelatedField(read_only = True,
                                           slug_field = 'uri_id',)
     url = serializers.HyperlinkedIdentityField(
         view_name = 'step-detail',
         lookup_field = 'uri_id',)
+    
+    substeps = RecursiveField(many=True)
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'url')
+        fields = ('uri_id', 'title', 'url', 'substeps')
 
 class StepDetailSerializer(serializers.ModelSerializer):
     uri_id = serializers.SlugRelatedField(read_only = True,
@@ -153,7 +161,7 @@ class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
                                           slug_field = 'uri_id',)
     steps_url = serializers.HyperlinkedIdentityField(
         view_name = 'how-to-step',
-        lookup_field = 'uri_id',)
+        lookup_field = 'uri_id')
     steps = StepSimpleSerializer(many = True, read_only = True)
 
     class Meta:
