@@ -1,8 +1,10 @@
 from rest_framework import serializers
+from rest_framework.response import Response
 from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep, Super
 from api.uri_id_generator import generate
 from rest_framework import generics
 from django.db.models import Max
+from rest_framework import status
 
 
 class HowToSerializer(serializers.HyperlinkedModelSerializer): 
@@ -60,7 +62,7 @@ class StepSerializer(serializers.HyperlinkedModelSerializer):
 class RecursiveField(serializers.Serializer):
 	# Source: https://programmersought.com/article/62131194762/
     def to_representation(self, value):
-        serializer = self.parent.parent.__class__(value, context=self.context)
+        serializer = self.parent.parent.__class__(value, context = self.context)
         return serializer.data
 
 class StepSimpleSerializer(serializers.HyperlinkedModelSerializer): 
@@ -70,7 +72,7 @@ class StepSimpleSerializer(serializers.HyperlinkedModelSerializer):
         view_name = 'step-detail',
         lookup_field = 'uri_id',)
     
-    substeps = RecursiveField(many=True)
+    substeps = RecursiveField(many = True)
 
     class Meta:
         model = Step
@@ -115,12 +117,39 @@ class HowToStepSerializer(serializers.Serializer):
         how_to_step = HowToStep.objects.create(how_to_id = how_to,
                                                step_id = step,
                                                pos = new_pos)
-
-        if False:
-            msg = 'Step already linked to How To. Duplicates not allowed'
-            raise serializers.ValidationError(msg)
-
         return how_to_step
+    
+    def validate(self, data):
+        uri_id = data['uri_id']
+        how_to_uri_id = data['how_to_uri_id']
+
+        how_to = HowToUriId.objects.get(uri_id = how_to_uri_id)
+        step = StepUriId.objects.get(uri_id = uri_id)
+
+        is_substep = HowToStep.objects.filter(how_to_id = how_to.id,
+                                              step_id = step.id).exists()
+
+        if is_substep:
+            msg = 'Step already linked to How To. Duplicate not allowed'
+            raise serializers.ValidationError(msg)
+        return data
+
+def has_forbidden_parent(parent, step):
+    parents = Super.objects.filter(step_id = step.id)
+    for parent in parents:
+        return has_forbidden_parent(parent, step)
+    return False
+
+def get_substeps(step):
+    if not step:
+        return []
+    substeps = []
+    subs = Super.objects.filter(super_id = step.id)
+    print(subs)
+    for sub in subs:
+        substeps.append(get_substeps(sub))
+    return substeps
+
 
 class SubstepSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length = 8)
@@ -144,14 +173,57 @@ class SubstepSerializer(serializers.Serializer):
         super_step = Super.objects.create(super_id = super,
                                           step_id = step,
                                           pos = new_pos)
-
         return super_step
+
+    def validate(self, data):
+        super_uri_id = data['super_uri_id']
+        step_uri_id = data['uri_id']
+
+        # Check for duplicate
+        super = Step.objects.get(stepuriid__uri_id = super_uri_id)
+        step = Step.objects.get(stepuriid__uri_id = step_uri_id)
+
+        is_substep = Super.objects.filter(super_id = super.id,
+                                              step_id = step.id).exists()
+
+        if is_substep:
+            msg = 'Step already linked to Superstep. Duplicate not allowed'
+            raise serializers.ValidationError(msg)
+        
+        # Check for circular reference
+        # Get a list of the complete substep trees
+
+        substep_tree = get_substeps(step)
+        #print(substep_tree)
+
+        return data
+
+    '''
+        parents = Super.objects.filter(step_id = step.id)
+        for parent in parents:
+            if has_forbidden_parent(parent, step):
+                msg = 'Step already linked to Superstep. Duplicate not allowed'
+                raise serializers.ValidationError(msg)
+    '''
+
+
+
+        # Check for circular reference child
+    
+
+
+    
+    '''
+    def superstep_has_substep(superstep, substep):
+        if superstep == substep:
+            return True
+        else:
+            supersuperstep = Super.objects.filter(super_id = super.id)
+    '''
     
     def destroy(self, validated_data):
         how_to_uri_id = validated_data['how_to_uri_id']
         step_uri_id = validated_data['uri_id']
-
-        print(how_to_uri_id, step_uri_id)
 
         return self
 

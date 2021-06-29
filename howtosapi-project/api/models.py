@@ -55,7 +55,7 @@ class Step(models.Model):
     def substeps(self):
         substeps = Super.objects.filter(super_id = self.id)
         step_ids = substeps.values_list('step_id', flat = True)
-        return Step.objects.filter(id__in = step_ids).order_by('substep__pos')
+        return Step.objects.filter(id__in = step_ids).distinct().order_by('substep__pos')
 
     def __str__(self):
         return f'{self.title}'

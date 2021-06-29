@@ -106,11 +106,12 @@ class HowToStepView(APIView):
         data = request.data
         data['how_to_uri_id'] = uri_id
         serializer = HowToStepSerializer(data = data)
+        
         if serializer.is_valid():
             serializer.save()
             return Response(status = status.HTTP_201_CREATED)
         return Response(serializer.errors,
-                        status = status.HTTP_400_BAD_REQUEST)
+                        status = status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class SubstepView(APIView):
     """
@@ -128,11 +129,12 @@ class SubstepView(APIView):
         data = request.data
         data['super_uri_id'] = uri_id
         serializer = SubstepSerializer(data = data)
+
         if serializer.is_valid():
             serializer.save()
             return Response(status = status.HTTP_201_CREATED)
         return Response(serializer.errors,
-                        status = status.HTTP_400_BAD_REQUEST)
+                        status = status.HTTP_405_METHOD_NOT_ALLOWED)
 
 class HowToStepDetailView(APIView):
     """
@@ -222,9 +224,20 @@ class StepDetailView(APIView):
         Step.objects.get(stepuriid__uri_id = uri_id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
+def get_parents(uri_id):
+    step = Step.objects.get(stepuriid__uri_id = uri_id)
+    parents = Super.objects.filter(step_id = step.id)
+    if parents:
+        add_parents = []
+        for parent in parents:
+            parent_uri_id = parent.super_id.uri_id
+            add_parents.append(get_parents(parent_uri_id))
+        return add_parents
+    return []
+
 class StepLinkableView(APIView):
     """
-    View to Steps that can be linked to a How To
+    View to Steps that can be linked to a Step
     """
     def get(self, request, uri_id):
         # Can not link itself
@@ -233,8 +246,15 @@ class StepLinkableView(APIView):
         # Can not link a Substep of this Step
         forbidden_substeps = Step.objects.get(stepuriid__uri_id = uri_id).substeps
         
+        # Can not link a Step that is already in the parent tree
+        forbidden_parents = []
+        parents = get_parents(uri_id)
+        for parent in parents:
+            forbidden_parents.append(parent)
         
-        steps = Step.objects.exclude(id = self_id).exclude(id__in = forbidden_substeps)
+        print(forbidden_parents)
+
+        steps = Step.objects.exclude(id = self_id).exclude(id__in = forbidden_substeps).exclude(title__in = ('a', 'b'))
 
         serializer = StepSimpleSerializer(steps,
                                           many = True,
