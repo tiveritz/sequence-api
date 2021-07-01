@@ -346,13 +346,8 @@ class DataIntegrityTest(APITestCase):
             self.client.post(url, data, format = 'json')
 
         # Try to link d to a -> conflict b (already linked to a)
-        url = reverse('sub-step', args = [steps['a'].data['uri_id']])
-        data = {'uri_id' : steps['d'].data['uri_id']}
-        response = self.client.post(url, data, format = 'json')
-
-        # Try to link d to a -> conflict b (already linked to a)
-        url = reverse('sub-step', args = [steps['a'].data['uri_id']])
-        data = {'uri_id' : steps['d'].data['uri_id']}
+        url = reverse('sub-step', args = [steps['c'].data['uri_id']])
+        data = {'uri_id' : steps['e'].data['uri_id']}
         response = self.client.post(url, data, format = 'json')
         
         msg = 'Adding forbidden circular reference was not blocked'

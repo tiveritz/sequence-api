@@ -111,3 +111,48 @@ class Super(models.Model):
 
     def __str__(self):
         return f'Super {self.super_id.uri_id} -> Step {self.step_id.uri_id}: pos {self.pos}'
+
+class Explanation(models.Model):
+    TYPE_CHOICES = (
+        ('text', 'Text'),
+        ('code', 'Code'),
+        ('image', 'Image'),
+    )
+    type = models.CharField(max_length = 32, choices = TYPE_CHOICES)
+    step = models.ForeignKey(
+        Step,
+        on_delete = models.CASCADE,
+        blank=True,
+        null = True,
+    )
+    pos = models.IntegerField(blank = True, null = True)
+    content = models.CharField(max_length = 4096, blank = True)
+
+    @property
+    def uri_id(self):
+        return ExplanationUriId.objects.get(explanation = self)
+
+    def __str__(self):
+        return f'Explanation type: {self.type}'
+
+class ExplanationUriId(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    explanation = models.OneToOneField(
+        Explanation,
+        on_delete = models.CASCADE
+        )
+    uri_id = models.CharField(max_length = 8)
+
+    def __str__(self):
+        return f'{self.uri_id}'
+
+
+
+'''
+TYPE_CHOICES = (
+    (0, 'Text'),
+    (1, 'Code'),
+    (1, 'Image'),
+)
+type = models.CharField(max_length = 1, choices = TYPE_CHOICES)
+'''

@@ -106,8 +106,8 @@ Depending on the complexity and time of the project various features can be impl
 
 ## Requirements
 cryptography==3.4.7<br>
-Django==3.1.4<br>
+Django==3.2.4<br>
 django-filter==2.4.0<br>
 djangorestframework==3.12.4<br>
 mysqlclient==2.0.3<br>
-python-dotenv==0.17.0<br>
+python-dotenv==0.18.0<br>

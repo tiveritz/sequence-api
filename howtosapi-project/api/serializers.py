@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.response import Response
-from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep, Super
+from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep, Super, Explanation
 from api.uri_id_generator import generate
 from rest_framework import generics
 from django.db.models import Max
@@ -140,16 +140,6 @@ def has_forbidden_parent(parent, step):
         return has_forbidden_parent(parent, step)
     return False
 
-def get_substeps(step):
-    if not step:
-        return []
-    substeps = []
-    subs = Super.objects.filter(super_id = step.id)
-    print(subs)
-    for sub in subs:
-        substeps.append(get_substeps(sub))
-    return substeps
-
 
 class SubstepSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length = 8)
@@ -192,34 +182,15 @@ class SubstepSerializer(serializers.Serializer):
         
         # Check for circular reference
         # Get a list of the complete substep trees
+        substep_ids = Super.objects.filter(super_id = super.id)
+        substeps = Step.objects.filter(id__in = substep_ids)
+        print(step, '->', super, substeps)
 
-        substep_tree = get_substeps(step)
-        #print(substep_tree)
+        if step in substeps:
+            msg = 'Step already linked to Superstep tree. Circular reference not allowed'
+            raise serializers.ValidationError(msg)
 
         return data
-
-    '''
-        parents = Super.objects.filter(step_id = step.id)
-        for parent in parents:
-            if has_forbidden_parent(parent, step):
-                msg = 'Step already linked to Superstep. Duplicate not allowed'
-                raise serializers.ValidationError(msg)
-    '''
-
-
-
-        # Check for circular reference child
-    
-
-
-    
-    '''
-    def superstep_has_substep(superstep, substep):
-        if superstep == substep:
-            return True
-        else:
-            supersuperstep = Super.objects.filter(super_id = super.id)
-    '''
     
     def destroy(self, validated_data):
         how_to_uri_id = validated_data['how_to_uri_id']
@@ -244,3 +215,23 @@ class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
+
+class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
+    uri_id = serializers.SlugRelatedField(read_only = True,
+                                          slug_field = 'uri_id',)
+
+    url = serializers.HyperlinkedIdentityField(
+        view_name = 'explanation-detail',
+        lookup_field = 'uri_id',)
+
+    class Meta:
+        model = Explanation
+        fields = ['uri_id', 'type', 'step', 'pos', 'url']
+
+class ExplanationDetailSerializer(serializers.ModelSerializer):
+    uri_id = serializers.SlugRelatedField(read_only = True,
+                                          slug_field = 'uri_id',)
+
+    class Meta:
+        model = Explanation
+        fields = ['uri_id', 'type', 'step', 'pos', 'content']
