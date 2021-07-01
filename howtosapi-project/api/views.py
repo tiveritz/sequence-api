@@ -3,14 +3,17 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework import status
 
-from api.models import HowTo, Step, HowToStep, HowToUriId, StepUriId, Super
+from api.models import HowTo, Step, HowToStep, HowToUriId, StepUriId, Super, Explanation
 from api.serializers import (HowToSerializer,
                              HowToDetailSerializer,
                              HowToStepSerializer,
                              StepSerializer,
                              StepSimpleSerializer,
                              StepDetailSerializer,
-                             SubstepSerializer)
+                             SubstepSerializer,
+                             ExplanationSerializer,
+                             ExplanationDetailSerializer,
+                             )
 
 
 class APIRoot(APIView):
@@ -19,6 +22,7 @@ class APIRoot(APIView):
             'statistics' : reverse('statistics', request = request),
             'howtos' : reverse('how-to-list', request = request),
             'steps' : reverse('step-list', request = request),
+            'explanations' : reverse('explanation', request = request),
         })
 
 class StatisticView(APIView):
@@ -261,3 +265,27 @@ class StepLinkableView(APIView):
                                           context = {'request' : request})
         return Response(serializer.data,
                         status = status.HTTP_200_OK)
+
+
+class ExplanationView(APIView):
+    """
+    View to Explanation Text Detail
+    """
+
+    def get(self, request):
+        explanations = Explanation.objects.all()
+        serializer = ExplanationSerializer(explanations,
+                                           many = True,
+                                           context = {'request': request})
+        return Response(serializer.data)
+
+class ExplanationDetailView(APIView):
+    """
+    View to Explanation Detail
+    """
+
+    def get(self, request, uri_id):
+        explanation = Explanation.objects.get(explanationuriid__uri_id = uri_id)
+        serializer = ExplanationDetailSerializer(explanation,
+                                                 context = {'request': request})
+        return Response(serializer.data)
