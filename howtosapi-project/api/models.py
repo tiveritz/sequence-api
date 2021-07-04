@@ -34,6 +34,7 @@ class HowToUriId(models.Model):
     uri_id = models.CharField(max_length = 8)
 
     def __str__(self):
+        # Do not change, that is the workaround for the serializer url
         return f'{self.uri_id}'
 
     class Meta:
@@ -57,6 +58,10 @@ class Step(models.Model):
         step_ids = substeps.values_list('step_id', flat = True)
         return Step.objects.filter(id__in = step_ids).distinct().order_by('substep__pos')
 
+    @property
+    def is_super(self):
+        return True if Super.objects.filter(super_id = self.id).exists() else False
+
     def __str__(self):
         return f'{self.title}'
 
@@ -72,6 +77,7 @@ class StepUriId(models.Model):
         verbose_name = 'Step Uri Id\''
 
     def __str__(self):
+        # Do not change, that is the workaround for the serializer url
         return f'{self.uri_id}'
 
 class HowToStep(models.Model):
@@ -91,7 +97,7 @@ class HowToStep(models.Model):
         verbose_name = 'How To\'s linked Step'
 
     def __str__(self):
-        return f'How To {self.how_to_id.uri_id} -> Step {self.step_id.uri_id}: pos {self.pos}'
+        return f'How To {self.how_to_id.id} -> Step {self.step_id.id}: pos {self.pos}'
 
 class Super(models.Model):
     super_id = models.ForeignKey(
@@ -126,6 +132,7 @@ class Explanation(models.Model):
         null = True,
     )
     pos = models.IntegerField(blank = True, null = True)
+    title = models.CharField(max_length = 128, blank = True)
     content = models.CharField(max_length = 4096, blank = True)
 
     @property
@@ -133,7 +140,7 @@ class Explanation(models.Model):
         return ExplanationUriId.objects.get(explanation = self)
 
     def __str__(self):
-        return f'Explanation type: {self.type}'
+        return f'{self.title}'
 
 class ExplanationUriId(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -146,13 +153,3 @@ class ExplanationUriId(models.Model):
     def __str__(self):
         return f'{self.uri_id}'
 
-
-
-'''
-TYPE_CHOICES = (
-    (0, 'Text'),
-    (1, 'Code'),
-    (1, 'Image'),
-)
-type = models.CharField(max_length = 1, choices = TYPE_CHOICES)
-'''

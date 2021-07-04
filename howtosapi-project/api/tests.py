@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-'''
+
 class HowToTests(APITestCase):
     def test_create_how_to(self):
         """
@@ -247,7 +247,7 @@ class SuperStepTest(APITestCase):
 
         msg = 'Step was not unlinked from Superstep correctly'
         self.assertFalse(len(response.data['substeps']), msg)
-'''
+
 class DataIntegrityTest(APITestCase):
     def test_forbidden_how_to_step_duplicate(self):
         """
@@ -274,7 +274,7 @@ class DataIntegrityTest(APITestCase):
         response = self.client.post(url, data, format = 'json')
 
         msg = 'Adding duplicate Substeps in a How To did not return correct status code'
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, msg)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
 
     def test_forbidden_step_duplicate(self):
         """
@@ -301,20 +301,19 @@ class DataIntegrityTest(APITestCase):
         response = self.client.post(url, data, format = 'json')
 
         msg = 'Adding duplicate Substeps in a Superstep did not return correct status code'
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, msg)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
 
     def test_forbidden_circular_reference_parent(self):
         """
         Ensure client can not add a Substep to a Superstep that has itself or
         any of its children already added
         """
-        # Make Tree
+        # Define Tree
         #
         # a       d     e
         # L b     L b   L f
         #   L c           L b
         #                   L c
-
 
         # Create Steps
         steps = {
@@ -351,4 +350,4 @@ class DataIntegrityTest(APITestCase):
         response = self.client.post(url, data, format = 'json')
         
         msg = 'Adding forbidden circular reference was not blocked'
-        self.assertEqual(response.status_code, status.HTTP_405_METHOD_NOT_ALLOWED, msg)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)

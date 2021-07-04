@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from rest_framework.response import Response
 from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep, Super, Explanation
-from api.uri_id_generator import generate
 from rest_framework import generics
 from django.db.models import Max
 from rest_framework import status
@@ -24,6 +23,7 @@ class HowToSerializer(serializers.HyperlinkedModelSerializer):
         Create the How To, generate a How To Uri Id and link it to the
         How To
         """
+        from .functions.uri_id_generator import generate
         how_to = HowTo.objects.create(**validated_data)
         uri_id = generate(how_to.id)
         how_to_uri_id = HowToUriId(
@@ -42,13 +42,14 @@ class StepSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'created', 'updated', 'url')
+        fields = ('uri_id', 'title', 'created', 'updated', 'is_super', 'url')
 
     def create(self, validated_data):
         """
         Create the How To, generate a How To Uri Id and link it to the
         How To
         """
+        from .functions.uri_id_generator import generate
         step = Step.objects.create(**validated_data)
         uri_id = generate(step.id)
         step_uri_id = StepUriId(
@@ -76,7 +77,7 @@ class StepSimpleSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'url', 'substeps')
+        fields = ('uri_id', 'title', 'is_super', 'url', 'substeps')
 
 class StepDetailSerializer(serializers.ModelSerializer):
     uri_id = serializers.SlugRelatedField(read_only = True,
@@ -108,17 +109,18 @@ class HowToStepSerializer(serializers.Serializer):
         
         how_to = HowTo.objects.get(howtouriid__uri_id = how_to_uri_id)
         step = Step.objects.get(stepuriid__uri_id = step_uri_id)
+
+        # Set position
         how_to_steps = HowToStep.objects.filter(how_to_id = how_to)
         how_to_max_pos = how_to_steps.aggregate(Max('pos'))
         pos = how_to_max_pos['pos__max']
-        
-        new_pos = pos + 1 if pos else 0
+        new_pos = 0 if pos == None else pos + 1
 
         how_to_step = HowToStep.objects.create(how_to_id = how_to,
                                                step_id = step,
                                                pos = new_pos)
         return how_to_step
-    
+
     def validate(self, data):
         uri_id = data['uri_id']
         how_to_uri_id = data['how_to_uri_id']
@@ -134,12 +136,6 @@ class HowToStepSerializer(serializers.Serializer):
             raise serializers.ValidationError(msg)
         return data
 
-def has_forbidden_parent(parent, step):
-    parents = Super.objects.filter(step_id = step.id)
-    for parent in parents:
-        return has_forbidden_parent(parent, step)
-    return False
-
 
 class SubstepSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length = 8)
@@ -154,11 +150,12 @@ class SubstepSerializer(serializers.Serializer):
 
         super = Step.objects.get(stepuriid__uri_id = super_uri_id)
         step = Step.objects.get(stepuriid__uri_id = step_uri_id)
+
+        # Set position
         super_steps = Super.objects.filter(super_id = super)
         super_max_pos = super_steps.aggregate(Max('pos'))
         pos = super_max_pos['pos__max']
-
-        new_pos = pos + 1 if pos else 0
+        new_pos = 0 if pos == None else pos + 1
 
         super_step = Super.objects.create(super_id = super,
                                           step_id = step,
@@ -166,6 +163,7 @@ class SubstepSerializer(serializers.Serializer):
         return super_step
 
     def validate(self, data):
+        from .functions.circular_reference import has_circular_reference
         super_uri_id = data['super_uri_id']
         step_uri_id = data['uri_id']
 
@@ -174,19 +172,14 @@ class SubstepSerializer(serializers.Serializer):
         step = Step.objects.get(stepuriid__uri_id = step_uri_id)
 
         is_substep = Super.objects.filter(super_id = super.id,
-                                              step_id = step.id).exists()
+                                          step_id = step.id).exists()
 
         if is_substep:
             msg = 'Step already linked to Superstep. Duplicate not allowed'
             raise serializers.ValidationError(msg)
         
         # Check for circular reference
-        # Get a list of the complete substep trees
-        substep_ids = Super.objects.filter(super_id = super.id)
-        substeps = Step.objects.filter(id__in = substep_ids)
-        print(step, '->', super, substeps)
-
-        if step in substeps:
+        if has_circular_reference(step, super):
             msg = 'Step already linked to Superstep tree. Circular reference not allowed'
             raise serializers.ValidationError(msg)
 
@@ -199,7 +192,7 @@ class SubstepSerializer(serializers.Serializer):
         return self
 
 
-class HowToDetailSerializer(serializers.HyperlinkedModelSerializer):
+class HowToDetailSerializer(serializers.ModelSerializer):
     uri_id = serializers.SlugRelatedField(read_only = True,
                                           slug_field = 'uri_id',)
     steps_url = serializers.HyperlinkedIdentityField(
@@ -226,7 +219,7 @@ class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Explanation
-        fields = ['uri_id', 'type', 'step', 'pos', 'url']
+        fields = ['uri_id', 'type', 'title', 'step', 'pos', 'url']
 
 class ExplanationDetailSerializer(serializers.ModelSerializer):
     uri_id = serializers.SlugRelatedField(read_only = True,
@@ -234,4 +227,4 @@ class ExplanationDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Explanation
-        fields = ['uri_id', 'type', 'step', 'pos', 'content']
+        fields = ['uri_id', 'type', 'title', 'step', 'pos', 'content']
