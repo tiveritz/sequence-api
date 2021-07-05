@@ -35,6 +35,7 @@ class HowToDetailView(APIView):
     """
     def get(self, request, uri_id):
         how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
+ 
         serializer = HowToDetailSerializer(how_to,
                                            context = {'request' : request})
         return Response(serializer.data)

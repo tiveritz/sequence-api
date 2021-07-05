@@ -14,9 +14,8 @@ class HowTo(models.Model):
     
     @property
     def steps(self):
-        how_to_steps = HowToStep.objects.filter(how_to_id = self.id)
-        step_ids = how_to_steps.values_list('step_id', flat = True)
-        return Step.objects.filter(id__in = step_ids).order_by('step__pos')
+        how_to_steps = HowToStep.objects.filter(how_to_id = self.id).order_by('pos')
+        return Step.objects.filter(step__in = how_to_steps).order_by('step__pos')
     
     def __str__(self):
         return f'{self.title}'
@@ -119,6 +118,7 @@ class Super(models.Model):
         return f'Super {self.super_id.uri_id} -> Step {self.step_id.uri_id}: pos {self.pos}'
 
 class Explanation(models.Model):
+    id = models.BigAutoField(primary_key=True)
     TYPE_CHOICES = (
         ('text', 'Text'),
         ('code', 'Code'),

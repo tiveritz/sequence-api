@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.response import Response
-from .models import HowTo, HowToUriId, Step, StepUriId, HowToStep, Super, Explanation
+from .models import (HowTo, HowToUriId, Step, StepUriId, HowToStep, Super,
+                     Explanation, ExplanationUriId)
 from rest_framework import generics
 from django.db.models import Max
 from rest_framework import status
@@ -198,7 +199,7 @@ class HowToDetailSerializer(serializers.ModelSerializer):
     steps_url = serializers.HyperlinkedIdentityField(
         view_name = 'how-to-step',
         lookup_field = 'uri_id')
-    steps = StepSimpleSerializer(many = True, read_only = True)
+    steps = StepSimpleSerializer(many = True, read_only = True, context = 'context')
 
     class Meta:
         model = HowTo
@@ -221,6 +222,23 @@ class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
         model = Explanation
         fields = ['uri_id', 'type', 'title', 'step', 'pos', 'url']
 
+    def create(self, validated_data):
+        """
+        Create the How To, generate a How To Uri Id and link it to the
+        How To
+        """
+        from .functions.uri_id_generator import generate
+        explanation = Explanation.objects.create(**validated_data)
+        uri_id = generate(explanation.id)
+        explanation_uri_id = ExplanationUriId(
+            uri_id = uri_id,
+            explanation = explanation
+        )
+        explanation_uri_id.save()
+
+        return explanation
+
+
 class ExplanationDetailSerializer(serializers.ModelSerializer):
     uri_id = serializers.SlugRelatedField(read_only = True,
                                           slug_field = 'uri_id',)
@@ -228,3 +246,7 @@ class ExplanationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Explanation
         fields = ['uri_id', 'type', 'title', 'step', 'pos', 'content']
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)

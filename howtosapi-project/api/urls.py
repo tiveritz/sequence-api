@@ -70,6 +70,11 @@ urlpatterns = [
          explanation_views.ExplanationDetailView.as_view(),
          name = 'explanation-detail'
          ),
+]
+
+urlpatterns = format_suffix_patterns(urlpatterns)
+
+'''
     path('explanation/text/',
          explanation_views.ExplanationView.as_view(),
          name = 'explanation-text'
@@ -78,6 +83,4 @@ urlpatterns = [
          explanation_views.ExplanationView.as_view(),
          name = 'explanation-code'
          ),
-]
-
-urlpatterns = format_suffix_patterns(urlpatterns)
+'''
