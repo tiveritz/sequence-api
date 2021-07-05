@@ -124,4 +124,11 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
+# Static files
 STATIC_URL = '/static/'
+ADMIN_MEDIA_PREFIX = '/static/admin/'
+STATIC_ROOT = '/home/api.tiveritz.at/public_html/howtos-project/public/static/'
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
