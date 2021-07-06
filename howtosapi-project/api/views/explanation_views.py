@@ -48,3 +48,7 @@ class ExplanationDetailView(APIView):
                             status = status.HTTP_200_OK)
         return Response(serializer.errors,
                         status = status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, uri_id):
+        Explanation.objects.get(explanationuriid__uri_id = uri_id).delete()
+        return Response(status = status.HTTP_204_NO_CONTENT)

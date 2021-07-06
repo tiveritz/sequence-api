@@ -86,7 +86,7 @@ class StepDetailSerializer(serializers.ModelSerializer):
     substeps_url = serializers.HyperlinkedIdentityField(
         view_name = 'sub-step',
         lookup_field = 'uri_id',)
-    substeps = StepSimpleSerializer(many = True, read_only = True)
+    substeps = StepSimpleSerializer(many = True, read_only = True, context = 'context')
 
     class Meta:
         model = Step

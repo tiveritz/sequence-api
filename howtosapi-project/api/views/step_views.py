@@ -39,33 +39,44 @@ class SubstepView(APIView):
         if method == 'order':
             old_index = data['old_index']
             new_index = data['new_index']
-            super = Super.objects.get(super_id = step.id, pos = old_index)
+
+            substep = Super.objects.get(super_id = step.id, pos = old_index)
 
             if old_index < new_index: # Move down
                 Super.objects.filter(super_id = step.id) \
                              .filter(pos__gt = old_index)   \
                              .filter(pos__lte = new_index)  \
                              .update(pos = F('pos') - 1)
-                super.pos = new_index
-                super.save()
+                substep.pos = new_index
+                substep.save()
 
             if old_index > new_index: # Move up
                 Super.objects.filter(super_id = step.id) \
                              .filter(pos__lt = old_index)   \
                              .filter(pos__gte = new_index)  \
                              .update(pos = F('pos') + 1)
-                super.pos = new_index
-                super.save()
+                substep.pos = new_index
+                substep.save()
 
             return Response(status = status.HTTP_200_OK)
 
         if method == 'delete':
-            data = request.data
+            from django.db.models import Max
+
             substep_uri_id = data['uri_id']
             
             substep = Step.objects.get(stepuriid__uri_id = substep_uri_id)
             delete = Super.objects.get(super_id = step, step_id = substep)
+            max_pos = Super.objects.filter(super_id = step).aggregate(Max('pos'))['pos__max']
+            pos = delete.pos
+
             delete.delete()
+
+            if pos != max_pos: # Move all following steps up
+                Super.objects.filter(super_id = step.id) \
+                                 .filter(pos__gt = pos)   \
+                                 .filter(pos__lte = max_pos)  \
+                                 .update(pos = F('pos') - 1)
 
             return Response(status = status.HTTP_200_OK)
         return Response(status = status.HTTP_400_BAD_REQUEST)

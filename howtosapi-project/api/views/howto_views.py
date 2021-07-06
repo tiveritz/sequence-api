@@ -109,12 +109,23 @@ class HowToStepView(APIView):
             return Response(status = status.HTTP_200_OK)
 
         if method == 'delete':
+            from django.db.models import Max
+
             step_uri_id = data['uri_id']
 
             step = Step.objects.get(stepuriid__uri_id = step_uri_id)
             delete = HowToStep.objects.get(how_to_id = how_to, step_id = step)
+            max_pos = HowToStep.objects.filter(how_to_id = how_to).aggregate(Max('pos'))['pos__max']
+            pos = delete.pos
 
             delete.delete()
+
+            if pos != max_pos: # Move all following steps up
+                HowToStep.objects.filter(how_to_id = how_to.id) \
+                                 .filter(pos__gt = pos)   \
+                                 .filter(pos__lte = max_pos)  \
+                                 .update(pos = F('pos') - 1)
+
             return Response(status = status.HTTP_200_OK)
         return Response(status = status.HTTP_400_BAD_REQUEST)
 

@@ -14,7 +14,7 @@ class HowTo(models.Model):
     
     @property
     def steps(self):
-        how_to_steps = HowToStep.objects.filter(how_to_id = self.id).order_by('pos')
+        how_to_steps = HowToStep.objects.filter(how_to_id = self.id)
         return Step.objects.filter(step__in = how_to_steps).order_by('step__pos')
     
     def __str__(self):
@@ -54,8 +54,7 @@ class Step(models.Model):
     @property
     def substeps(self):
         substeps = Super.objects.filter(super_id = self.id)
-        step_ids = substeps.values_list('step_id', flat = True)
-        return Step.objects.filter(id__in = step_ids).distinct().order_by('substep__pos')
+        return Step.objects.filter(substep__in = substeps).order_by('substep__pos')
 
     @property
     def is_super(self):
