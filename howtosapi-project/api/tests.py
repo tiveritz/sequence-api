@@ -22,7 +22,6 @@ class HowToTests(APITestCase):
         msg = 'Uri ID was not created correctly'
         # Matches any word with lower letters, numbers with a exact length of
         # 8 characters
-        #pattern = re.compile(r'^[a-z0-9]{8}$')
         pattern = re.compile(r'^[a-z0-9]{8}$')
         is_match = re.match(pattern, str(response.data['uri_id'])) or False
         self.assertTrue(is_match, msg)
@@ -39,7 +38,7 @@ class HowToTests(APITestCase):
         response_get = self.client.get(url, format = 'json')
         
         msg = 'Retreiving How To by Uri ID failed'  
-        self.assertEqual(response_post.data['title'], data['title'], msg)
+        self.assertEqual(response_get.data['title'], data['title'], msg)
     
 
     def test_update_how_to(self):
@@ -124,7 +123,7 @@ class StepTest(APITestCase):
         response_get = self.client.get(url, format = 'json')
         
         msg = 'Retreiving Step by Uri ID failed'  
-        self.assertEqual(response_post.data['title'], data['title'], msg)
+        self.assertEqual(response_get.data['title'], data['title'], msg)
 
     def test_update_step(self):
         """

@@ -8,7 +8,8 @@ from .models import (HowTo,
                      HowToStep,
                      Super,
                      Explanation,
-                     ExplanationUriId,)
+                     ExplanationUriId,
+                     StepExplanation)
 
 admin.site.register(HowTo)
 admin.site.register(HowToUriId)
@@ -18,3 +19,4 @@ admin.site.register(HowToStep)
 admin.site.register(Super)
 admin.site.register(Explanation)
 admin.site.register(ExplanationUriId)
+admin.site.register(StepExplanation)

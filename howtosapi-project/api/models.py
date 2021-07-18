@@ -57,6 +57,11 @@ class Step(models.Model):
         return Step.objects.filter(substep__in = substeps).order_by('substep__pos')
 
     @property
+    def explanations(self):
+        explanations = StepExplanation.objects.filter(step = self)
+        return Explanation.objects.filter(stepexplanation__in = explanations).order_by('stepexplanation__pos')
+
+    @property
     def is_super(self):
         return True if Super.objects.filter(super_id = self.id).exists() else False
 
@@ -124,13 +129,8 @@ class Explanation(models.Model):
         ('image', 'Image'),
     )
     type = models.CharField(max_length = 32, choices = TYPE_CHOICES)
-    step = models.ForeignKey(
-        Step,
-        on_delete = models.CASCADE,
-        blank=True,
-        null = True,
-    )
-    pos = models.IntegerField(blank = True, null = True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length = 128, blank = True)
     content = models.CharField(max_length = 4096, blank = True)
 
@@ -150,5 +150,19 @@ class ExplanationUriId(models.Model):
     uri_id = models.CharField(max_length = 8)
 
     def __str__(self):
+        # Do not change, that is the workaround for the serializer url
         return f'{self.uri_id}'
 
+class StepExplanation(models.Model):
+    step = models.ForeignKey(
+        Step,
+        on_delete = models.CASCADE,
+        )
+    explanation = models.ForeignKey(
+        Explanation,
+        on_delete = models.CASCADE,
+        )
+    pos = models.IntegerField()
+
+    def __str__(self):
+        return f'Step {self.step.uri_id} -> Explanation {self.explanation.uri_id}: pos {self.pos}'

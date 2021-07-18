@@ -3,9 +3,11 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from ..models import HowTo, Step, HowToStep, HowToUriId, StepUriId, Super, HowToStep
-from ..serializers import (HowToSerializer, HowToDetailSerializer,
-                           HowToStepSerializer, StepSimpleSerializer)
+from ..models import HowTo, Step, HowToStep, HowToUriId, StepUriId, HowToStep
+from ..serializers.howto_serializers import (HowToSerializer,
+                                             HowToDetailSerializer,
+                                             HowToStepSerializer,
+                                             StepSimpleSerializer)
 
 
 class HowToListView(APIView):
@@ -28,6 +30,7 @@ class HowToListView(APIView):
                             status = status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status = status.HTTP_400_BAD_REQUEST)
+
 
 class HowToDetailView(APIView):
     """
@@ -56,6 +59,7 @@ class HowToDetailView(APIView):
     def delete(self, request, uri_id):
         HowTo.objects.get(howtouriid__uri_id = uri_id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
+
 
 class HowToStepView(APIView):
     """
@@ -140,6 +144,7 @@ class HowToStepDetailView(APIView):
         HowToStep.objects.filter(how_to_id = how_to.id,
                                  step_id = step.id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
+
 
 class HowToLinkableView(APIView):
     """

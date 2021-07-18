@@ -1,11 +1,17 @@
 from django.db.models import F
+from django.db.models import Max
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from ..models import Step, StepUriId, Super
-from ..serializers import (StepSerializer, StepSimpleSerializer,
-                           StepDetailSerializer, SubstepSerializer)
+from ..models import Step, StepUriId, Super, Explanation, StepExplanation
+from ..serializers.step_serializers import (StepSerializer,
+                                            StepSimpleSerializer,
+                                            StepDetailSerializer,
+                                            SubstepSerializer,
+                                            StepExplanationSerializer)
+from ..serializers.explanation_serializers import (ExplanationDetailSerializer,
+                                                   ExplanationSimpleSerializer)
 
 
 class SubstepView(APIView):
@@ -44,16 +50,16 @@ class SubstepView(APIView):
 
             if old_index < new_index: # Move down
                 Super.objects.filter(super_id = step.id) \
-                             .filter(pos__gt = old_index)   \
-                             .filter(pos__lte = new_index)  \
+                             .filter(pos__gt = old_index) \
+                             .filter(pos__lte = new_index) \
                              .update(pos = F('pos') - 1)
                 substep.pos = new_index
                 substep.save()
 
             if old_index > new_index: # Move up
                 Super.objects.filter(super_id = step.id) \
-                             .filter(pos__lt = old_index)   \
-                             .filter(pos__gte = new_index)  \
+                             .filter(pos__lt = old_index) \
+                             .filter(pos__gte = new_index) \
                              .update(pos = F('pos') + 1)
                 substep.pos = new_index
                 substep.save()
@@ -61,8 +67,6 @@ class SubstepView(APIView):
             return Response(status = status.HTTP_200_OK)
 
         if method == 'delete':
-            from django.db.models import Max
-
             substep_uri_id = data['uri_id']
             
             substep = Step.objects.get(stepuriid__uri_id = substep_uri_id)
@@ -74,8 +78,8 @@ class SubstepView(APIView):
 
             if pos != max_pos: # Move all following steps up
                 Super.objects.filter(super_id = step.id) \
-                                 .filter(pos__gt = pos)   \
-                                 .filter(pos__lte = max_pos)  \
+                                 .filter(pos__gt = pos) \
+                                 .filter(pos__lte = max_pos) \
                                  .update(pos = F('pos') - 1)
 
             return Response(status = status.HTTP_200_OK)
@@ -92,6 +96,7 @@ class SuperDetailView(APIView):
         Super.objects.filter(super_id = super.id,
                              step_id = step.id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
+
 
 class StepListView(APIView):
     """
@@ -115,6 +120,7 @@ class StepListView(APIView):
                             status = status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status = status.HTTP_400_BAD_REQUEST)
+
 
 class StepDetailView(APIView):
     """
@@ -211,3 +217,87 @@ class StepLinkableView(APIView):
         return Response(serializer.data,
                         status = status.HTTP_200_OK)
 
+
+class StepLinkableModulesView(APIView):
+    """
+    View to Modules that can be linked to a Step
+    """
+    def get(self, request, uri_id):
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        explanations = Explanation.objects.exclude(id__in = step.explanations)
+        serializer = ExplanationDetailSerializer(explanations,
+                                                 many = True,
+                                                 context = {'request' : request})
+        return Response(serializer.data,
+                status = status.HTTP_200_OK)
+
+class StepExplanationView(APIView):
+    """
+    View to explanations of a step
+    """
+    def get(self, request, uri_id):
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        explanations = step.explanations
+        serializer = ExplanationSimpleSerializer(explanations,
+                                          many = True,
+                                          context = {'request' : request})
+        return Response(serializer.data)
+
+    def post(self, request, uri_id, format = None):
+        data = request.data
+        data['step_uri_id'] = uri_id
+        serializer = StepExplanationSerializer(data = data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status = status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status = status.HTTP_403_FORBIDDEN)
+
+    def patch(self, request, uri_id):
+        data = request.data
+        method = data['method']
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+
+        if method == 'order':
+            old_index = data['old_index']
+            new_index = data['new_index']
+
+            explanation = StepExplanation.objects.get(step = step, pos = old_index)
+
+            if old_index < new_index: # Move down
+                StepExplanation.objects.filter(step = step) \
+                                       .filter(pos__gt = old_index) \
+                                       .filter(pos__lte = new_index) \
+                                       .update(pos = F('pos') - 1)
+                explanation.pos = new_index
+                explanation.save()
+
+            if old_index > new_index: # Move up
+                StepExplanation.objects.filter(step = step) \
+                                       .filter(pos__lt = old_index) \
+                                       .filter(pos__gte = new_index) \
+                                       .update(pos = F('pos') + 1)
+                explanation.pos = new_index
+                explanation.save()
+
+            return Response(status = status.HTTP_200_OK)
+
+        if method == 'delete':
+            explanation_uri_id = data['uri_id']
+            
+            explanation = Explanation.objects.get(explanationuriid__uri_id = explanation_uri_id)
+            delete = StepExplanation.objects.get(step = step, explanation = explanation)
+            max_pos = StepExplanation.objects.filter(step = step).aggregate(Max('pos'))['pos__max']
+            pos = delete.pos
+
+            delete.delete()
+
+            if pos != max_pos: # Move all following steps up
+                StepExplanation.objects.filter(step = step) \
+                                 .filter(pos__gt = pos) \
+                                 .filter(pos__lte = max_pos) \
+                                 .update(pos = F('pos') - 1)
+
+            return Response(status = status.HTTP_200_OK)
+        return Response(status = status.HTTP_400_BAD_REQUEST)

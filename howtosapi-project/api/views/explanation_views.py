@@ -2,7 +2,8 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import Explanation
-from ..serializers import ExplanationSerializer, ExplanationDetailSerializer
+from ..serializers.explanation_serializers import (ExplanationSerializer,
+                                                   ExplanationDetailSerializer)
 
 
 class ExplanationView(APIView):
@@ -10,7 +11,7 @@ class ExplanationView(APIView):
     View to Explanation Text Detail
     """
     def get(self, request):
-        explanations = Explanation.objects.all().order_by('-id')
+        explanations = Explanation.objects.all().order_by('-updated')
         serializer = ExplanationSerializer(explanations,
                                            many = True,
                                            context = {'request': request})
@@ -25,6 +26,7 @@ class ExplanationView(APIView):
                             status = status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status = status.HTTP_400_BAD_REQUEST)
+
 
 class ExplanationDetailView(APIView):
     """
