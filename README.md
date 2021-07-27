@@ -105,9 +105,10 @@ Depending on the complexity and time of the project various features can be impl
 
 
 ## Requirements
-pip install cryptography==3.4.7
-pip install Django==3.2.4
-pip install django-filter==2.4.0
-pip install djangorestframework==3.12.4
-pip install mysqlclient==2.0.3
-pip install python-dotenv==0.18.0
+cryptography==3.4.7
+Django==3.2.4
+django-filter==2.4.0
+djangorestframework==3.12.4
+mysqlclient==2.0.3
+python-dotenv==0.18.0
+Pillow==8.3.1
