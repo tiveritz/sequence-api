@@ -1,10 +1,11 @@
 from rest_framework import serializers
 from django.db.models import Max
-from ..models import Step, StepUriId, Super, Explanation, StepExplanation
+from ..models import Step, StepUriId, Super, Explanation, StepExplanation, Image
 from ..functions.uri_id_generator import generate
 from ..functions.circular_reference import has_circular_reference
 from .recursive_serializers import RecursiveField
 from .explanation_serializers import ExplanationSimpleSerializer
+from .module_serializer import ModuleListSerializer
 
 
 class StepSerializer(serializers.HyperlinkedModelSerializer): 
@@ -53,16 +54,16 @@ class StepDetailSerializer(serializers.ModelSerializer):
     substeps_url = serializers.HyperlinkedIdentityField(
         view_name = 'sub-step',
         lookup_field = 'uri_id',)
-    explanations_url = serializers.HyperlinkedIdentityField(
+    modules_url = serializers.HyperlinkedIdentityField(
         view_name = 'step-explanation',
         lookup_field = 'uri_id',)
     substeps = StepSimpleSerializer(many = True, read_only = True, context = 'context')
-    explanations = ExplanationSimpleSerializer(many = True, read_only = True, context = 'context')
+    modules = ModuleListSerializer(many = True, read_only = True, context = 'context')
 
     class Meta:
         model = Step
         fields = ('uri_id', 'title', 'created', 'updated', 'description',
-                  'substeps_url', 'substeps', 'explanations_url', 'explanations')
+                  'substeps_url', 'substeps', 'modules_url', 'modules')
     
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -127,16 +128,16 @@ class SubstepSerializer(serializers.Serializer):
 class StepExplanationSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length = 8)
     step_uri_id = serializers.CharField(max_length = 8)
+    type = serializers.CharField(max_length = 128)
 
     def create(self, validated_data):
         """
         Link a step to a How To
         """
         step_uri_id = validated_data['step_uri_id']
-        explanation_uri_id = validated_data['uri_id']
+        uri_id = validated_data['uri_id']
 
         step = Step.objects.get(stepuriid__uri_id = step_uri_id)
-        explanation = Explanation.objects.get(explanationuriid__uri_id = explanation_uri_id)
 
         # Set position
         explanations = StepExplanation.objects.filter(step = step)
@@ -144,32 +145,39 @@ class StepExplanationSerializer(serializers.Serializer):
         pos = explanation_max_pos['pos__max']
         new_pos = 0 if pos == None else pos + 1
 
-        step_explanation = StepExplanation.objects.create(step = step,
-                                                          explanation = explanation,
-                                                          pos = new_pos)
+        # Set linked content
+        if validated_data['type'] == 'explanation':
+            explanation = Explanation.objects.get(explanationuriid__uri_id = uri_id)
+            step_explanation = StepExplanation.objects.create(step = step,
+                                                              explanation = explanation,
+                                                              pos = new_pos)
+        elif validated_data['type'] == 'image':
+            image = Image.objects.get(uri_id = uri_id)
+            step_explanation = StepExplanation.objects.create(step = step,
+                                                            image = image,
+                                                            pos = new_pos)
+        
         return step_explanation
 
     def validate(self, data):
         step_uri_id = data['step_uri_id']
-        explanation_uri_id = data['uri_id']
+        uri_id = data['uri_id']
+        type = data['type']
 
         # Check for duplicate
         step = Step.objects.get(stepuriid__uri_id = step_uri_id)
-        explanation = Explanation.objects.get(explanationuriid__uri_id = explanation_uri_id)
 
-        has_explanation = StepExplanation.objects.filter(step = step,
-                                                         explanation = explanation).exists()
+        if type == 'explanation':
+            explanation = Explanation.objects.get(explanationuriid__uri_id = uri_id)
+            has_duplicate = StepExplanation.objects.filter(step = step,
+                                                           explanation = explanation).exists()
+        elif type == 'image':
+            image = Image.objects.get(uri_id = uri_id)
+            has_duplicate = StepExplanation.objects.filter(step = step,
+                                                           image = image).exists()
 
-        if has_explanation:
+        if has_duplicate:
             msg = 'Explanation already linked to Step. Duplicate not allowed'
             raise serializers.ValidationError(msg)
 
         return data
-    
-    '''
-    def destroy(self, validated_data):
-        how_to_uri_id = validated_data['how_to_uri_id']
-        explanation_uri_id = validated_data['uri_id']
-
-        return self
-    '''

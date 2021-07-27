@@ -4,14 +4,15 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from ..models import Step, StepUriId, Super, Explanation, StepExplanation
+from ..models import Step, StepUriId, Super, Explanation, StepExplanation, Image
 from ..serializers.step_serializers import (StepSerializer,
                                             StepSimpleSerializer,
                                             StepDetailSerializer,
                                             SubstepSerializer,
-                                            StepExplanationSerializer)
+                                            StepExplanationSerializer,)
 from ..serializers.explanation_serializers import (ExplanationDetailSerializer,
                                                    ExplanationSimpleSerializer)
+from ..serializers.media_serializers import ImageSerializer
 
 
 class SubstepView(APIView):
@@ -228,6 +229,19 @@ class StepLinkableModulesView(APIView):
         serializer = ExplanationDetailSerializer(explanations,
                                                  many = True,
                                                  context = {'request' : request})
+        return Response(serializer.data,
+                status = status.HTTP_200_OK)
+
+class StepLinkableImagesView(APIView):
+    """
+    View to Images that can be linked to a Step
+    """
+    def get(self, request, uri_id):
+        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        images = Image.objects.exclude(id__in = step.images)
+        serializer = ImageSerializer(images,
+                                     many = True,
+                                     context = {'request' : request})
         return Response(serializer.data,
                 status = status.HTTP_200_OK)
 

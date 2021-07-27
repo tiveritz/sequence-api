@@ -6,8 +6,9 @@ from rest_framework.reverse import reverse
 class APIRoot(APIView):
     def get(self, request):
         return Response({
-            'statistics' : reverse('statistics', request = request),
-            'howtos' : reverse('how-to-list', request = request),
-            'steps' : reverse('step-list', request = request),
-            'explanations' : reverse('explanation', request = request),
+            'statistics': reverse('statistics', request = request),
+            'howtos': reverse('how-to-list', request = request),
+            'steps': reverse('step-list', request = request),
+            'explanations': reverse('explanation', request = request),
+            'images': reverse('images', request = request),
         })

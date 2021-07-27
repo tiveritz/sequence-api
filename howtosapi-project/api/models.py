@@ -57,9 +57,23 @@ class Step(models.Model):
         return Step.objects.filter(substep__in = substeps).order_by('substep__pos')
 
     @property
-    def explanations(self):
-        explanations = StepExplanation.objects.filter(step = self)
-        return Explanation.objects.filter(stepexplanation__in = explanations).order_by('stepexplanation__pos')
+    def modules(self):
+        step_modules = StepExplanation.objects.filter(step = self).order_by('pos')
+        modules = []
+
+        for module in step_modules:
+            if module.explanation:
+                modules.append(module.explanation)
+            elif module.image:
+                modules.append(module.image)
+
+        return modules
+
+    @property
+    def images(self):
+        images = StepExplanation.objects.filter(step = self)
+        return Image.objects.filter(stepexplanation__in = images).order_by('stepexplanation__pos')
+
 
     @property
     def is_super(self):
@@ -126,7 +140,6 @@ class Explanation(models.Model):
     TYPE_CHOICES = (
         ('text', 'Text'),
         ('code', 'Code'),
-        ('image', 'Image'),
     )
     type = models.CharField(max_length = 32, choices = TYPE_CHOICES)
     created = models.DateTimeField(auto_now_add=True)
@@ -153,6 +166,21 @@ class ExplanationUriId(models.Model):
         # Do not change, that is the workaround for the serializer url
         return f'{self.uri_id}'
 
+class Image(models.Model):
+    uri_id = models.CharField(max_length = 8)
+    image = models.ImageField(blank=False, null=False)
+    title = models.CharField(max_length = 128, blank = True)
+    caption = models.CharField(max_length = 128, blank = True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    @property
+    def type(self):
+        return 'image'
+
+    def __str__(self):
+        return f'{self.uri_id}'
+
 class StepExplanation(models.Model):
     step = models.ForeignKey(
         Step,
@@ -161,6 +189,14 @@ class StepExplanation(models.Model):
     explanation = models.ForeignKey(
         Explanation,
         on_delete = models.CASCADE,
+        blank=True,
+        null=True
+        )
+    image = models.ForeignKey(
+        Image,
+        on_delete = models.CASCADE,
+        blank=True,
+        null=True
         )
     pos = models.IntegerField()
 

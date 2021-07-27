@@ -9,7 +9,8 @@ from .models import (HowTo,
                      Super,
                      Explanation,
                      ExplanationUriId,
-                     StepExplanation)
+                     StepExplanation,
+                     Image)
 
 admin.site.register(HowTo)
 admin.site.register(HowToUriId)
@@ -20,3 +21,4 @@ admin.site.register(Super)
 admin.site.register(Explanation)
 admin.site.register(ExplanationUriId)
 admin.site.register(StepExplanation)
+admin.site.register(Image)
