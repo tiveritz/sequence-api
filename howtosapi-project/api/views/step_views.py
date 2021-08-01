@@ -225,7 +225,9 @@ class StepLinkableModulesView(APIView):
     """
     def get(self, request, uri_id):
         step = Step.objects.get(stepuriid__uri_id = uri_id)
-        explanations = Explanation.objects.exclude(id__in = step.explanations)
+        step_explanations = StepExplanation.objects.filter(step = step)
+        exclude = [module.explanation_id for module in step_explanations if not module.image]
+        explanations = Explanation.objects.exclude(id__in = exclude)
         serializer = ExplanationDetailSerializer(explanations,
                                                  many = True,
                                                  context = {'request' : request})
@@ -298,10 +300,14 @@ class StepExplanationView(APIView):
             return Response(status = status.HTTP_200_OK)
 
         if method == 'delete':
-            explanation_uri_id = data['uri_id']
+            uri_id = data['uri_id']
             
-            explanation = Explanation.objects.get(explanationuriid__uri_id = explanation_uri_id)
-            delete = StepExplanation.objects.get(step = step, explanation = explanation)
+            if Explanation.objects.filter(explanationuriid__uri_id = uri_id).exists():
+                explanation = Explanation.objects.get(explanationuriid__uri_id = uri_id)
+                delete = StepExplanation.objects.get(step = step, explanation = explanation)
+            else:
+                image = Image.objects.get(uri_id = uri_id)
+                delete = StepExplanation.objects.get(step = step, image = image)
             max_pos = StepExplanation.objects.filter(step = step).aggregate(Max('pos'))['pos__max']
             pos = delete.pos
 
