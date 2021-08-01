@@ -8,6 +8,7 @@ class cAppSettings:
         self.SECRET_KEY = os.getenv('SECRET_KEY')
         self.DEBUG = self.get_bool_env('DEBUG')
         self.ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
+        self.MEDIA_ROOT = os.getenv('MEDIA_ROOT')
         self.SECURE_SSL_REDIRECT = self.get_bool_env('SECURE_SSL_REDIRECT')
         self.DB_NAME = os.getenv('DB_NAME')
         self.DB_USER = os.getenv('DB_USER')
