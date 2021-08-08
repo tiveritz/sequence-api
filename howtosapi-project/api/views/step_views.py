@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from ..models import Step, StepUriId, Super, Explanation, StepExplanation, Image
+from ..models import Step, SuperStep, Explanation, StepModule, Image
 from ..serializers.step_serializers import (StepSerializer,
                                             StepSimpleSerializer,
                                             StepDetailSerializer,
@@ -19,15 +19,14 @@ class SubstepView(APIView):
     """
     View to Substeps
     """
-    def get(self, request, uri_id):
-        super = Step.objects.get(stepuriid__uri_id = uri_id)
-        steps = super.substeps
+    def get(self, request, uri_id): #TEST OK
+        steps = Step.objects.get(uri_id = uri_id).substeps
         serializer = StepSimpleSerializer(steps,
                                           many = True,
                                           context = {'request' : request})
         return Response(serializer.data)
 
-    def post(self, request, uri_id, format = None):
+    def post(self, request, uri_id, format = None): #TEST OK
         data = request.data
         data['super_uri_id'] = uri_id
         serializer = SubstepSerializer(data = data)
@@ -38,19 +37,19 @@ class SubstepView(APIView):
         return Response(serializer.errors,
                         status = status.HTTP_403_FORBIDDEN)
 
-    def patch(self, request, uri_id):
+    def patch(self, request, uri_id): #TEST OK
         data = request.data
         method = data['method']
-        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        super = Step.objects.get(uri_id=uri_id)
 
         if method == 'order':
             old_index = data['old_index']
             new_index = data['new_index']
 
-            substep = Super.objects.get(super_id = step.id, pos = old_index)
+            substep = SuperStep.objects.get(super=super, pos=old_index)
 
             if old_index < new_index: # Move down
-                Super.objects.filter(super_id = step.id) \
+                SuperStep.objects.filter(super = super) \
                              .filter(pos__gt = old_index) \
                              .filter(pos__lte = new_index) \
                              .update(pos = F('pos') - 1)
@@ -58,7 +57,7 @@ class SubstepView(APIView):
                 substep.save()
 
             if old_index > new_index: # Move up
-                Super.objects.filter(super_id = step.id) \
+                SuperStep.objects.filter(super = super) \
                              .filter(pos__lt = old_index) \
                              .filter(pos__gte = new_index) \
                              .update(pos = F('pos') + 1)
@@ -87,23 +86,23 @@ class SubstepView(APIView):
         return Response(status = status.HTTP_400_BAD_REQUEST)
 
 
-class SuperDetailView(APIView):
+class SuperDetailView(APIView): #TEST OK
     """
     View to Steps of a How To
     """
-    def delete(self, request, uri_id, step_uri_id):
-        super = StepUriId.objects.get(uri_id = uri_id)
-        step = StepUriId.objects.get(uri_id = step_uri_id)
-        Super.objects.filter(super_id = super.id,
-                             step_id = step.id).delete()
+    def delete(self, request, uri_id, step_uri_id): #TEST OK
+        super = Step.objects.get(uri_id = uri_id)
+        sub = Step.objects.get(uri_id = step_uri_id)
+        SuperStep.objects.filter(super = super,
+                                 sub = sub).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
 
-class StepListView(APIView):
+class StepListView(APIView): #TEST OK
     """
     View to Steps
     """
-    def get(self, request):
+    def get(self, request): #TEST OK
         steps = Step.objects.all().order_by('-updated')
         serializer = StepSerializer(
             steps,
@@ -112,7 +111,7 @@ class StepListView(APIView):
             )
         return Response(serializer.data)
 
-    def post(self, request, format = None):
+    def post(self, request, format = None): #TEST OK
         serializer = StepSerializer(data = request.data,
                                     context = {'request': request})
         if serializer.is_valid():
@@ -123,18 +122,21 @@ class StepListView(APIView):
                         status = status.HTTP_400_BAD_REQUEST)
 
 
-class StepDetailView(APIView):
+class StepDetailView(APIView): #TEST OK
     """
     View to Step with it's content
     """
-    def get(self, request, uri_id):
-        step = Step.objects.get(stepuriid__uri_id = uri_id)
+    def get(self, request, uri_id): #TEST OK
+        try:
+            step = Step.objects.get(uri_id = uri_id)
+        except Step.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = StepDetailSerializer(step,
                                           context = {'request': request})
         return Response(serializer.data)
     
-    def patch(self, request, uri_id):
-        step = Step.objects.get(stepuriid__uri_id = uri_id)
+    def patch(self, request, uri_id): #TEST OK
+        step = Step.objects.get(uri_id = uri_id)
         serializer = StepDetailSerializer(step,
                                           data = request.data,
                                           partial = True,
@@ -146,8 +148,8 @@ class StepDetailView(APIView):
         return Response(serializer.errors,
                         status = status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, uri_id):
-        Step.objects.get(stepuriid__uri_id = uri_id).delete()
+    def delete(self, request, uri_id): #TEST OK
+        Step.objects.get(uri_id = uri_id).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
 

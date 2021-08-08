@@ -3,25 +3,25 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from ..models import HowTo, Step, HowToStep, HowToUriId, StepUriId, HowToStep
+from ..models import HowTo, Step, HowToStep, HowToStep
 from ..serializers.howto_serializers import (HowToSerializer,
                                              HowToDetailSerializer,
                                              HowToStepSerializer,
                                              StepSimpleSerializer)
 
 
-class HowToListView(APIView):
+class HowToListView(APIView): #TEST OK
     """
     View to How To's
     """
-    def get(self, request):
+    def get(self, request): #TEST OK
         how_tos = HowTo.objects.all().order_by('-updated')
         serializer = HowToSerializer(how_tos,
                                      many = True,
                                      context = {'request' : request})
         return Response(serializer.data)
     
-    def post(self, request, format = None):
+    def post(self, request, format = None): #TEST OK
         serializer = HowToSerializer(data = request.data,
                                      context = {'request': request})
         if serializer.is_valid():
@@ -36,15 +36,18 @@ class HowToDetailView(APIView):
     """
     View to How To with it's content
     """
-    def get(self, request, uri_id):
-        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
- 
+    def get(self, request, uri_id): #TEST OK
+        try:
+            how_to = HowTo.objects.get(uri_id=uri_id)
+        except HowTo.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         serializer = HowToDetailSerializer(how_to,
                                            context = {'request' : request})
         return Response(serializer.data)
-    
-    def patch(self, request, uri_id):
-        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
+
+    def patch(self, request, uri_id): #TEST OK
+        how_to = HowTo.objects.get(uri_id = uri_id)
         serializer = HowToDetailSerializer(how_to,
                                            data = request.data,
                                            partial = True,
@@ -52,23 +55,22 @@ class HowToDetailView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,
-                            status = status.HTTP_200_OK)
+                            status=status.HTTP_200_OK)
         return Response(serializer.errors,
-                        status = status.HTTP_400_BAD_REQUEST)
+                        status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, uri_id):
-        HowTo.objects.get(howtouriid__uri_id = uri_id).delete()
-        return Response(status = status.HTTP_204_NO_CONTENT)
+    def delete(self, request, uri_id): #TEST OK
+        HowTo.objects.get(uri_id=uri_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class HowToStepView(APIView):
     """
     View to Steps of a How To
     """
-    def get(self, request, uri_id):
-        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
-        steps = how_to.steps
-        serializer = StepSimpleSerializer(steps,
+    def get(self, request, uri_id): #TEST OK
+        how_to_steps = HowTo.objects.get(uri_id=uri_id).steps
+        serializer = StepSimpleSerializer(how_to_steps,
                                           many = True,
                                           context = {'request' : request})
         return Response(serializer.data)
@@ -84,29 +86,29 @@ class HowToStepView(APIView):
         return Response(serializer.errors,
                         status = status.HTTP_403_FORBIDDEN)
     
-    def patch(self, request, uri_id):
+    def patch(self, request, uri_id): #TEST OK
         data = request.data
         method = data['method']
-        how_to = HowTo.objects.get(howtouriid__uri_id = uri_id)
+        how_to = HowTo.objects.get(uri_id=uri_id)
 
         if method == 'order':
             old_index = data['old_index']
             new_index = data['new_index']
-            how_to_step = HowToStep.objects.get(how_to_id = how_to.id, pos = old_index)
+            how_to_step = HowToStep.objects.get(how_to=how_to, pos=old_index)
 
             if old_index < new_index: # Move down
-                HowToStep.objects.filter(how_to_id = how_to.id) \
-                                 .filter(pos__gt = old_index)   \
-                                 .filter(pos__lte = new_index)  \
-                                 .update(pos = F('pos') - 1)
+                HowToStep.objects.filter(how_to=how_to) \
+                                 .filter(pos__gt=old_index)   \
+                                 .filter(pos__lte=new_index)  \
+                                 .update(pos=F('pos') - 1)
                 how_to_step.pos = new_index
                 how_to_step.save()
 
             if old_index > new_index: # Move up
-                HowToStep.objects.filter(how_to_id = how_to.id) \
-                                 .filter(pos__lt = old_index)   \
-                                 .filter(pos__gte = new_index)  \
-                                 .update(pos = F('pos') + 1)
+                HowToStep.objects.filter(how_to=how_to) \
+                                 .filter(pos__lt=old_index)   \
+                                 .filter(pos__gte=new_index)  \
+                                 .update(pos=F('pos') + 1)
                 how_to_step.pos = new_index
                 how_to_step.save()
 
@@ -134,15 +136,15 @@ class HowToStepView(APIView):
         return Response(status = status.HTTP_400_BAD_REQUEST)
 
 
-class HowToStepDetailView(APIView):
+class HowToStepDetailView(APIView): #TEST OK
     """
     View to Steps of a How To
     """
-    def delete(self, request, uri_id, step_uri_id):
-        how_to = HowToUriId.objects.get(uri_id = uri_id)
-        step = StepUriId.objects.get(uri_id = step_uri_id)
-        HowToStep.objects.filter(how_to_id = how_to.id,
-                                 step_id = step.id).delete()
+    def delete(self, request, uri_id, step_uri_id): #TEST OK
+        how_to = HowTo.objects.get(uri_id = uri_id)
+        step = Step.objects.get(uri_id = step_uri_id)
+        HowToStep.objects.filter(how_to = how_to,
+                                 step = step).delete()
         return Response(status = status.HTTP_204_NO_CONTENT)
 
 

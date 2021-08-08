@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from ..models import Image
-from ..functions.uri_id_generator import generate
 
 
 class ImageSerializer(serializers.ModelSerializer):

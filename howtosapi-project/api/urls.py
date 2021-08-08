@@ -37,14 +37,3 @@ urlpatterns = [
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
-
-'''
-    path('explanation/text/',
-         explanation_views.ExplanationView.as_view(),
-         name = 'explanation-text'
-         ),
-    path('explanation/code/',
-         explanation_views.ExplanationView.as_view(),
-         name = 'explanation-code'
-         ),
-'''

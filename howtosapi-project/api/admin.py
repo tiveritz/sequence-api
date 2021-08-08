@@ -2,23 +2,17 @@ from django.contrib import admin
 
 
 from .models import (HowTo,
-                     HowToUriId,
                      Step,
-                     StepUriId,
                      HowToStep,
-                     Super,
+                     SuperStep,
                      Explanation,
-                     ExplanationUriId,
-                     StepExplanation,
+                     StepModule,
                      Image)
 
 admin.site.register(HowTo)
-admin.site.register(HowToUriId)
 admin.site.register(Step)
-admin.site.register(StepUriId)
 admin.site.register(HowToStep)
-admin.site.register(Super)
+admin.site.register(SuperStep)
 admin.site.register(Explanation)
-admin.site.register(ExplanationUriId)
-admin.site.register(StepExplanation)
+admin.site.register(StepModule)
 admin.site.register(Image)

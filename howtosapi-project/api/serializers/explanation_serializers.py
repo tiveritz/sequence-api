@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.db.models import Max
-from ..models import Explanation, ExplanationUriId
-from ..functions.uri_id_generator import generate
+from ..models import Explanation
+from ..functions.uri_id import generate_uri_id
 
 
 class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
