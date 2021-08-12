@@ -13,8 +13,8 @@ class ImageView(APIView):
     def get(self, request):
         images = Image.objects.all().order_by('-updated')
         serializer = ImageSerializer(images,
-                                     many = True,
-                                     context = {'request' : request})
+                                     many=True,
+                                     context={'request' : request})
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
@@ -24,10 +24,10 @@ class ImageView(APIView):
             request.data['image'].name = uri_id + '.' + orig_name.split('.')[-1]
 
             Image.objects.create(
-                uri_id = uri_id,
-                image = request.data['image'],
-                title = orig_name,
-                caption = request.data.get('caption', None),
+                uri_id=uri_id,
+                image=request.data['image'],
+                title=orig_name,
+                caption=request.data.get('caption', None),
             )
             return Response(status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)

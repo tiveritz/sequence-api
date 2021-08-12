@@ -186,7 +186,7 @@ class HowToStepTest(APITestCase):
         data = {'method' : 'order', 'old_index' : 0, 'new_index' : 1}
         response = self.client.patch(url, data, format = 'json')
 
-        msg = 'Reorderung did not return 200'  
+        msg = 'Reorderung Substep did not return 200'  
         self.assertEqual(response.status_code, status.HTTP_200_OK, msg)  
 
         # Check new order
@@ -196,3 +196,44 @@ class HowToStepTest(APITestCase):
         msg = 'Changed step position is not ok'
         self.assertEqual(steps[0]['uri_id'], substep2.data['uri_id'], msg)
         self.assertEqual(steps[1]['uri_id'], substep1.data['uri_id'], msg)
+
+    def test_delete_substep(self):
+        """
+        Ensure client can delete substeps
+        """
+        # Create a How To
+        url = reverse('how-to-list')
+        data = {'title' : 'Linkable How To'}
+        how_to = self.client.post(url, data, format = 'json')
+        
+        # Create a Step
+        url = reverse('step-list')
+        data = {'title' : 'Step to link'}
+        step = self.client.post(url, data, format = 'json')
+
+        # Link Step to How To
+        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        data = {'uri_id' : step.data['uri_id']}
+        self.client.post(url, data, format = 'json')
+
+        # Check if Step was correctly linked
+        url = reverse('how-to-detail', args = [how_to.data['uri_id']])
+        response = self.client.get(url, format = 'json').data
+
+        msg = 'Step was not linked to How To correctly'
+        self.assertEqual(response['steps'][0]['uri_id'], step.data['uri_id'], msg)
+
+        # Delete
+        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        data = {'method' : 'delete', 'uri_id' : response['steps'][0]['uri_id']}
+        response = self.client.patch(url, data, format = 'json')
+
+        msg = 'Deleting Substep did not return 200'  
+        self.assertEqual(response.status_code, status.HTTP_200_OK, msg)  
+
+        # Check if successfully deleted
+        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        steps = self.client.get(url, format = 'json').data
+
+        msg = 'Deleting Substep was not successfull'  
+        self.assertEqual(len(steps), 0, msg)

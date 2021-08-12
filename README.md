@@ -112,3 +112,5 @@ djangorestframework==3.12.4
 mysqlclient==2.0.3
 python-dotenv==0.18.0
 Pillow==8.3.1
+django-nose==1.4.7
+coverage==5.5

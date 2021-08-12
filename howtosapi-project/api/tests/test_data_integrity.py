@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 
-'''
 class DataIntegrityTest(APITestCase):
     def test_forbidden_how_to_step_duplicate(self):
         """
@@ -116,4 +115,3 @@ class DataIntegrityTest(APITestCase):
         
         msg = 'Adding forbidden circular reference was not blocked'
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
-'''

@@ -10,48 +10,48 @@ from ..serializers.howto_serializers import (HowToSerializer,
                                              StepSimpleSerializer)
 
 
-class HowToListView(APIView): #TEST OK
+class HowToListView(APIView):
     """
     View to How To's
     """
-    def get(self, request): #TEST OK
+    def get(self, request):
         how_tos = HowTo.objects.all().order_by('-updated')
         serializer = HowToSerializer(how_tos,
-                                     many = True,
-                                     context = {'request' : request})
+                                     many=True,
+                                     context={'request' : request})
         return Response(serializer.data)
     
-    def post(self, request, format = None): #TEST OK
-        serializer = HowToSerializer(data = request.data,
-                                     context = {'request': request})
+    def post(self, request, format=None):
+        serializer = HowToSerializer(data=request.data,
+                                     context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,
-                            status = status.HTTP_201_CREATED)
+                            status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
-                        status = status.HTTP_400_BAD_REQUEST)
+                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class HowToDetailView(APIView):
     """
     View to How To with it's content
     """
-    def get(self, request, uri_id): #TEST OK
+    def get(self, request, uri_id):
         try:
             how_to = HowTo.objects.get(uri_id=uri_id)
         except HowTo.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = HowToDetailSerializer(how_to,
-                                           context = {'request' : request})
+                                           context={'request' : request})
         return Response(serializer.data)
 
-    def patch(self, request, uri_id): #TEST OK
-        how_to = HowTo.objects.get(uri_id = uri_id)
+    def patch(self, request, uri_id):
+        how_to = HowTo.objects.get(uri_id=uri_id)
         serializer = HowToDetailSerializer(how_to,
-                                           data = request.data,
-                                           partial = True,
-                                           context = {'request' : request})
+                                           data=request.data,
+                                           partial=True,
+                                           context={'request' : request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,
@@ -59,7 +59,7 @@ class HowToDetailView(APIView):
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, uri_id): #TEST OK
+    def delete(self, request, uri_id):
         HowTo.objects.get(uri_id=uri_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -68,25 +68,25 @@ class HowToStepView(APIView):
     """
     View to Steps of a How To
     """
-    def get(self, request, uri_id): #TEST OK
+    def get(self, request, uri_id):
         how_to_steps = HowTo.objects.get(uri_id=uri_id).steps
         serializer = StepSimpleSerializer(how_to_steps,
-                                          many = True,
-                                          context = {'request' : request})
+                                          many=True,
+                                          context={'request' : request})
         return Response(serializer.data)
 
-    def post(self, request, uri_id, format = None):
+    def post(self, request, uri_id, format=None):
         data = request.data
         data['how_to_uri_id'] = uri_id
-        serializer = HowToStepSerializer(data = data)
+        serializer = HowToStepSerializer(data=data)
         
         if serializer.is_valid():
             serializer.save()
-            return Response(status = status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
-                        status = status.HTTP_403_FORBIDDEN)
+                        status=status.HTTP_403_FORBIDDEN)
     
-    def patch(self, request, uri_id): #TEST OK
+    def patch(self, request, uri_id):
         data = request.data
         method = data['method']
         how_to = HowTo.objects.get(uri_id=uri_id)
@@ -112,40 +112,41 @@ class HowToStepView(APIView):
                 how_to_step.pos = new_index
                 how_to_step.save()
 
-            return Response(status = status.HTTP_200_OK)
+            return Response(status=status.HTTP_200_OK)
 
         if method == 'delete':
             from django.db.models import Max
 
             step_uri_id = data['uri_id']
 
-            step = Step.objects.get(stepuriid__uri_id = step_uri_id)
-            delete = HowToStep.objects.get(how_to_id = how_to, step_id = step)
-            max_pos = HowToStep.objects.filter(how_to_id = how_to).aggregate(Max('pos'))['pos__max']
+            step = Step.objects.get(uri_id=step_uri_id)
+            delete = HowToStep.objects.get(how_to=how_to, step=step)
+            max_pos = HowToStep.objects.filter(how_to=how_to) \
+                .aggregate(Max('pos'))['pos__max']
             pos = delete.pos
 
             delete.delete()
 
             if pos != max_pos: # Move all following steps up
-                HowToStep.objects.filter(how_to_id = how_to.id) \
-                                 .filter(pos__gt = pos)   \
-                                 .filter(pos__lte = max_pos)  \
-                                 .update(pos = F('pos') - 1)
+                HowToStep.objects.filter(how_to=how_to) \
+                                 .filter(pos__gt=pos)   \
+                                 .filter(pos__lte=max_pos)  \
+                                 .update(pos=F('pos') - 1)
 
-            return Response(status = status.HTTP_200_OK)
-        return Response(status = status.HTTP_400_BAD_REQUEST)
+            return Response(status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
-class HowToStepDetailView(APIView): #TEST OK
+class HowToStepDetailView(APIView):
     """
     View to Steps of a How To
     """
-    def delete(self, request, uri_id, step_uri_id): #TEST OK
-        how_to = HowTo.objects.get(uri_id = uri_id)
-        step = Step.objects.get(uri_id = step_uri_id)
-        HowToStep.objects.filter(how_to = how_to,
-                                 step = step).delete()
-        return Response(status = status.HTTP_204_NO_CONTENT)
+    def delete(self, request, uri_id, step_uri_id):
+        how_to = HowTo.objects.get(uri_id=uri_id)
+        step = Step.objects.get(uri_id=step_uri_id)
+        HowToStep.objects.filter(how_to=how_to,
+                                 step=step).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class HowToLinkableView(APIView):
@@ -154,12 +155,12 @@ class HowToLinkableView(APIView):
     """
     def get(self, request, uri_id):
         # Can not be linked to this How To already
-        forbidden_steps = HowTo.objects.get(howtouriid__uri_id = uri_id).steps
-        steps = Step.objects.exclude(id__in = forbidden_steps).order_by('-updated')
-
+        forbidden_steps = HowTo.objects.get(uri_id=uri_id).steps
+        forbidden_uri_ids = [step.uri_id for step in forbidden_steps]
+        steps = Step.objects.exclude(uri_id__in=forbidden_uri_ids).order_by('-updated')
 
         serializer = StepSimpleSerializer(steps,
-                                          many = True,
-                                          context = {'request' : request})
+                                          many=True,
+                                          context={'request' : request})
         return Response(serializer.data,
-                        status = status.HTTP_200_OK)
+                        status=status.HTTP_200_OK)

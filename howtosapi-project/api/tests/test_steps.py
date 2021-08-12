@@ -196,3 +196,44 @@ class SuperStepTest(APITestCase):
         msg = 'Changed step position is not ok'
         self.assertEqual(steps[0]['uri_id'], substep2.data['uri_id'], msg)
         self.assertEqual(steps[1]['uri_id'], substep1.data['uri_id'], msg)
+
+    def test_delete_substep(self):
+        """
+        Ensure client can delete substeps
+        """
+        # Create a Superstep
+        url = reverse('step-list')
+        data = {'title' : 'Superstep to link'}
+        superstep = self.client.post(url, data, format = 'json')
+        
+        # Create a Substep
+        url = reverse('step-list')
+        data = {'title' : 'Substep to link'}
+        substep = self.client.post(url, data, format = 'json')
+
+        # Link Step to Superstep
+        url = reverse('sub-step', args = [superstep.data['uri_id']])
+        data = {'uri_id' : substep.data['uri_id']}
+        self.client.post(url, data, format = 'json')
+
+        # Check if Step was correctly linked
+        url = reverse('step-detail', args = [superstep.data['uri_id']])
+        response = self.client.get(url, format = 'json').data
+
+        msg = 'Subtep was not linked to Superstep correctly'
+        self.assertEqual(response['substeps'][0]['uri_id'], substep.data['uri_id'], msg)
+
+        # Delete
+        url = reverse('sub-step', args = [superstep.data['uri_id']])
+        data = {'method' : 'delete', 'uri_id' : response['substeps'][0]['uri_id']}
+        response = self.client.patch(url, data, format = 'json')
+
+        msg = 'Deleting Substep did not return 200'  
+        self.assertEqual(response.status_code, status.HTTP_200_OK, msg)  
+
+        # Check if successfully deleted
+        url = reverse('sub-step', args = [superstep.data['uri_id']])
+        steps = self.client.get(url, format = 'json').data
+
+        msg = 'Deleting Substep was not successfull'  
+        self.assertEqual(len(steps), 0, msg)
