@@ -39,7 +39,7 @@ class StepDetailSerializer(serializers.ModelSerializer):
         view_name='sub-step',
         lookup_field='uri_id',)
     modules_url = serializers.HyperlinkedIdentityField(
-        view_name='step-explanation',
+        view_name='step-module',
         lookup_field='uri_id',)
     substeps = StepSimpleSerializer(many=True, read_only=True, context='context')
     modules = ModuleListSerializer(many=True, read_only=True, context='context')
@@ -103,7 +103,7 @@ class SubstepSerializer(serializers.Serializer):
         return data
 
 
-class StepExplanationSerializer(serializers.Serializer):
+class StepModuleSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length=8)
     step_uri_id = serializers.CharField(max_length=8)
     type = serializers.CharField(max_length=128)

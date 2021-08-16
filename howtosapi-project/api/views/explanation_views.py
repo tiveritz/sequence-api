@@ -19,7 +19,7 @@ class ExplanationView(APIView):
     
     def post(self, request, format=None):
         serializer = ExplanationSerializer(data=request.data,
-                                     context={'request': request})
+                                           context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,
@@ -33,7 +33,10 @@ class ExplanationDetailView(APIView):
     View to Explanation Detail
     """
     def get(self, request, uri_id):
-        explanation = Explanation.objects.get(uri_id=uri_id)
+        try:
+            explanation = Explanation.objects.get(uri_id=uri_id)
+        except Explanation.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ExplanationDetailSerializer(explanation,
                                                  context={'request': request})
         return Response(serializer.data)

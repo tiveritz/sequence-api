@@ -1,13 +1,19 @@
+import copy
 from django.db.models import F
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.utils import timezone
+from django.conf import settings
+from ..functions.uri_id import generate_uri_id
 
-from ..models import HowTo, Step, HowToStep, HowToStep
+from ..models import (HowTo, Step, HowToStep, HowToStep, GuideHowTo,
+                      GuideStep)
+
 from ..serializers.howto_serializers import (HowToSerializer,
                                              HowToDetailSerializer,
                                              HowToStepSerializer,
-                                             StepSimpleSerializer)
+                                             StepSimpleSerializer,)
 
 
 class HowToListView(APIView):
@@ -163,4 +169,174 @@ class HowToLinkableView(APIView):
                                           many=True,
                                           context={'request' : request})
         return Response(serializer.data,
+                        status=status.HTTP_200_OK)
+
+class HowToPublishView(APIView):
+    """
+    View to Publish a How To
+    """
+    def render_content(self, modules):
+        if modules:
+            rendered = ''
+            for module in modules:
+                if module.type == 'text':
+                    before = '<pre class="module-text">\n'
+                    after = '</pre>\n'
+                    content = before + module.content + after
+                    rendered += content
+
+                elif module.type == 'code':
+                    before = '<pre class="module-code">\n'
+                    after = '</pre>\n'
+                    content =  before + module.content + after
+                    rendered += content
+
+                elif module.type == 'image':
+                    img_url = settings.MEDIA_URL + module.image.name
+                    img = '<img class="module-image" src="{}" alt="{}">\n'.format(
+                        img_url, module.caption
+                    )
+                    rendered += img
+            return rendered
+        return ''
+
+    def recursive_stepdict(self, step, level, pos):
+        stepdict = {}
+        stepdict[step.uri_id] = {
+            'ref_id': generate_uri_id(),
+            'number': '{}.{}'.format(level+1, pos),
+            'title': step.title,
+            'current': False,
+            'level': level,
+        }
+
+        if step.substeps:
+            level += 1
+            pos = 1
+            for step in step.substeps:
+                substepdict = self.recursive_stepdict(step, level, pos)
+                stepdict = {**stepdict, **substepdict}
+                pos += 1
+        return stepdict
+
+    def recursive_guide_step(self, guide_howto, step, stepdict, steplist):
+        stepdict_current = copy.deepcopy(stepdict)
+        stepdict_current[step.uri_id]['current'] = True
+        pos = steplist.index(step.uri_id)
+
+        json_stepdict = {}
+        step_pos = 0
+        for uri_id in steplist:
+            step_current = {
+                step_pos: {
+                    'uri_id': uri_id,
+                    'ref_id': stepdict_current[uri_id]['ref_id'],
+                    'number': stepdict_current[uri_id]['number'],
+                    'title' : stepdict_current[uri_id]['title'],
+                    'current' : stepdict_current[uri_id]['current'],
+                    'level' : stepdict_current[uri_id]['level'],
+                }
+            }
+            json_stepdict = {**json_stepdict, **step_current}
+            step_pos += 1
+
+        uri_id = json_stepdict[pos]['uri_id']
+        ref_id =json_stepdict[pos]['ref_id']
+
+        first = json_stepdict[0]['uri_id']
+        first_ref = json_stepdict[0]['ref_id']
+
+        if pos > 0:
+            previous = json_stepdict[pos-1]['uri_id']
+            previous_ref = json_stepdict[pos-1]['ref_id']
+        else:
+            previous, previous_ref = '', ''
+
+        if pos < len(steplist)-1:
+            next = json_stepdict[pos+1]['uri_id']
+            next_ref = json_stepdict[pos+1]['ref_id']
+        else:
+            next, next_ref = '', ''
+
+        rendered_content = self.render_content(step.modules)
+
+        GuideStep.objects.create(
+            uri_id=uri_id,
+            ref_id=ref_id,
+            howto=guide_howto,
+            howto_title=guide_howto.title,
+            title=step.title,
+            steps=json_stepdict,
+            first=first,
+            first_ref=first_ref,
+            previous=previous,
+            previous_ref=previous_ref,
+            next=next,
+            next_ref=next_ref,
+            content=rendered_content,
+        )
+
+        if step.substeps:
+            for step in step.substeps:
+                self.recursive_guide_step(guide_howto, step, stepdict, steplist)
+
+    def post(self, request, uri_id):
+        # Delete previous published data
+        if GuideHowTo.objects.filter(uri_id=uri_id).exists():
+            GuideHowTo.objects.get(uri_id=uri_id).delete()
+
+        # Get How To
+        howto = HowTo.objects.get(uri_id=uri_id)
+
+        # Get How To Steps
+        steps = howto.steps
+
+        # Generate stepdict
+        stepdict = {}
+        pos = 1
+        for step in steps:
+            stepdict = {**stepdict, **self.recursive_stepdict(step, 0, pos)}
+            pos += 1
+        steplist = list(stepdict.keys())
+
+        json_stepdict = {}
+        step_pos = 0
+        for step in steplist:
+            step = {
+                step_pos: {
+                    'uri_id': step,
+                    'ref_id': stepdict[step]['ref_id'],
+                    'number': stepdict[step]['number'],
+                    'title' : stepdict[step]['title'],
+                    'current' : stepdict[step]['current'],
+                    'level' : stepdict[step]['level'],
+                }
+            }
+            json_stepdict = {**json_stepdict, **step}
+            step_pos += 1
+
+        # Write GuideHowTo
+        guide_howto = GuideHowTo.objects.create(
+            uri_id=howto.uri_id,
+            title=howto.title,
+            first=steps[0].uri_id,
+            first_ref=stepdict[steps[0].uri_id]['ref_id'],
+            steps=json_stepdict,
+        )
+
+        # Write GuideStep
+        for step in steps:
+            self.recursive_guide_step(guide_howto, step, stepdict, steplist)
+
+        # Save Successful publish to How To
+        howto.is_published=True
+        howto.publish_date=timezone.now()
+        howto.save()
+
+        payload = {
+            'is_published': howto.is_published,
+            'publish_date': howto.publish_date,
+        }
+
+        return Response(payload,
                         status=status.HTTP_200_OK)

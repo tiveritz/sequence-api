@@ -145,4 +145,5 @@ STATICFILES_FINDERS = (
 )
 
 MEDIA_URL = '/media/'
+MEDIA_URL = app_settings.MEDIA_URL
 MEDIA_ROOT = app_settings.MEDIA_ROOT

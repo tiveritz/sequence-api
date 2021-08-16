@@ -12,22 +12,22 @@ class DataIntegrityTest(APITestCase):
         # Create a How To
         url = reverse('how-to-list')
         data = {'title' : 'Linkable How To'}
-        how_to = self.client.post(url, data, format = 'json')
+        how_to = self.client.post(url, data, format='json')
 
         # Create a Substep
         url = reverse('step-list')
         data = {'title' : 'Super'}
-        step = self.client.post(url, data, format = 'json')
+        step = self.client.post(url, data, format='json')
 
         # Link Step to How To
-        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[how_to.data['uri_id']])
         data = {'uri_id' : step.data['uri_id']}
-        self.client.post(url, data, format = 'json')
+        self.client.post(url, data, format='json')
 
         # Try to link the step a second time
-        url = reverse('how-to-step', args = [how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[how_to.data['uri_id']])
         data = {'uri_id' : step.data['uri_id']}
-        response = self.client.post(url, data, format = 'json')
+        response = self.client.post(url, data, format='json')
 
         msg = 'Adding duplicate Substeps in a How To did not return correct status code'
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
@@ -39,22 +39,22 @@ class DataIntegrityTest(APITestCase):
         # Create a Superstep
         url = reverse('step-list')
         data = {'title' : 'Super'}
-        superstep = self.client.post(url, data, format = 'json')
+        superstep = self.client.post(url, data, format='json')
 
         # Create a Substep
         url = reverse('step-list')
         data = {'title' : 'Super'}
-        substep = self.client.post(url, data, format = 'json')
+        substep = self.client.post(url, data, format='json')
 
         # Link Step to Superstep
-        url = reverse('sub-step', args = [superstep.data['uri_id']])
+        url = reverse('sub-step', args=[superstep.data['uri_id']])
         data = {'uri_id' : substep.data['uri_id']}
-        self.client.post(url, data, format = 'json')
+        self.client.post(url, data, format='json')
 
         # Try to link the step a second time
-        url = reverse('sub-step', args = [superstep.data['uri_id']])
+        url = reverse('sub-step', args=[superstep.data['uri_id']])
         data = {'uri_id' : substep.data['uri_id']}
-        response = self.client.post(url, data, format = 'json')
+        response = self.client.post(url, data, format='json')
 
         msg = 'Adding duplicate Substeps in a Superstep did not return correct status code'
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
@@ -84,7 +84,7 @@ class DataIntegrityTest(APITestCase):
         url = reverse('step-list')
         for stepname in steps:
             data = {'title' : stepname}
-            steps[stepname] = self.client.post(url, data, format = 'json')
+            steps[stepname] = self.client.post(url, data, format='json')
 
         # Link Steps
         links = [
@@ -96,22 +96,22 @@ class DataIntegrityTest(APITestCase):
         ]
 
         for link in links:
-            url = reverse('sub-step', args = [link[0].data['uri_id']])
+            url = reverse('sub-step', args=[link[0].data['uri_id']])
             data = {'uri_id' : link[1].data['uri_id']}
-            self.client.post(url, data, format = 'json')
+            self.client.post(url, data, format='json')
 
         # Try to link c to e -> conflict c (is substep of e)
-        url = reverse('sub-step', args = [steps['c'].data['uri_id']])
+        url = reverse('sub-step', args=[steps['c'].data['uri_id']])
         data = {'uri_id' : steps['e'].data['uri_id']}
-        response = self.client.post(url, data, format = 'json')
+        response = self.client.post(url, data, format='json')
         
         msg = 'Adding forbidden circular reference was not blocked'
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)
 
         # Try to link e to c -> conflict e (has c and b as substep)
-        url = reverse('sub-step', args = [steps['c'].data['uri_id']])
+        url = reverse('sub-step', args=[steps['c'].data['uri_id']])
         data = {'uri_id' : steps['e'].data['uri_id']}
-        response = self.client.post(url, data, format = 'json')
+        response = self.client.post(url, data, format='json')
         
         msg = 'Adding forbidden circular reference was not blocked'
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN, msg)

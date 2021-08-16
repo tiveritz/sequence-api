@@ -9,7 +9,7 @@ from ..serializers.step_serializers import (StepSerializer,
                                             StepSimpleSerializer,
                                             StepDetailSerializer,
                                             SubstepSerializer,
-                                            StepExplanationSerializer,)
+                                            StepModuleSerializer,)
 from ..serializers.explanation_serializers import (ExplanationDetailSerializer,
                                                    ExplanationSimpleSerializer)
 from ..serializers.media_serializers import ImageSerializer
@@ -181,7 +181,7 @@ class StepLinkableView(APIView):
 
         # Recursively add supersteps
         for superstep in supersteps:
-            step = Step.objects.get(id=superstep.super.uri_id)
+            step = Step.objects.get(uri_id=superstep.super.uri_id)
             superstep_tree = self.get_superstep_tree(step)
             if superstep_tree:
                 superstep_tree.append(superstep.super)
@@ -225,9 +225,9 @@ class StepLinkableModulesView(APIView):
     """
     def get(self, request, uri_id):
         step = Step.objects.get(uri_id=uri_id)
-        step_explanations = StepModule.objects.filter(step=step)
-        exclude = [module.explanation_id for module in step_explanations if not module.image]
-        explanations = Explanation.objects.exclude(id__in=exclude)
+        step_modules = StepModule.objects.filter(step=step)
+        exclude = [module.explanation.uri_id for module in step_modules if not module.image]
+        explanations = Explanation.objects.exclude(uri_id__in=exclude)
         serializer = ExplanationDetailSerializer(explanations,
                                                  many=True,
                                                  context={'request' : request})
@@ -239,20 +239,20 @@ class StepLinkableImagesView(APIView):
     View to Images that can be linked to a Step
     """
     def get(self, request, uri_id):
-        step = Step.objects.get(stepuriid__uri_id = uri_id)
-        images = Image.objects.exclude(id__in = step.images)
+        step = Step.objects.get(uri_id=uri_id)
+        images = Image.objects.exclude(uri_id__in = step.images).order_by('-updated')
         serializer = ImageSerializer(images,
                                      many=True,
                                      context={'request' : request})
         return Response(serializer.data,
                 status=status.HTTP_200_OK)
 
-class StepExplanationView(APIView):
+class StepModuleView(APIView):
     """
     View to explanations of a step
     """
     def get(self, request, uri_id):
-        step = Step.objects.get(stepuriid__uri_id=uri_id)
+        step = Step.objects.get(uri_id=uri_id)
         explanations = step.explanations
         serializer = ExplanationSimpleSerializer(explanations,
                                           many=True,
@@ -262,7 +262,7 @@ class StepExplanationView(APIView):
     def post(self, request, uri_id, format=None):
         data = request.data
         data['step_uri_id'] = uri_id
-        serializer = StepExplanationSerializer(data=data)
+        serializer = StepModuleSerializer(data=data)
 
         if serializer.is_valid():
             serializer.save()
@@ -273,27 +273,27 @@ class StepExplanationView(APIView):
     def patch(self, request, uri_id):
         data = request.data
         method = data['method']
-        step = Step.objects.get(stepuriid__uri_id = uri_id)
+        step = Step.objects.get(uri_id=uri_id)
 
         if method == 'order':
             old_index = data['old_index']
             new_index = data['new_index']
 
-            explanation = StepExplanation.objects.get(step = step, pos = old_index)
+            explanation = StepModule.objects.get(step=step, pos=old_index)
 
             if old_index < new_index: # Move down
-                StepExplanation.objects.filter(step = step) \
-                                       .filter(pos__gt = old_index) \
-                                       .filter(pos__lte = new_index) \
-                                       .update(pos = F('pos') - 1)
+                StepModule.objects.filter(step=step) \
+                                       .filter(pos__gt=old_index) \
+                                       .filter(pos__lte=new_index) \
+                                       .update(pos=F('pos') - 1)
                 explanation.pos = new_index
                 explanation.save()
 
             if old_index > new_index: # Move up
-                StepExplanation.objects.filter(step = step) \
-                                       .filter(pos__lt = old_index) \
-                                       .filter(pos__gte = new_index) \
-                                       .update(pos = F('pos') + 1)
+                StepModule.objects.filter(step=step) \
+                                       .filter(pos__lt=old_index) \
+                                       .filter(pos__gte=new_index) \
+                                       .update(pos=F('pos') + 1)
                 explanation.pos = new_index
                 explanation.save()
 
@@ -302,22 +302,22 @@ class StepExplanationView(APIView):
         if method == 'delete':
             uri_id = data['uri_id']
             
-            if Explanation.objects.filter(explanationuriid__uri_id = uri_id).exists():
-                explanation = Explanation.objects.get(explanationuriid__uri_id = uri_id)
-                delete = StepExplanation.objects.get(step = step, explanation = explanation)
+            if Explanation.objects.filter(uri_id=uri_id).exists():
+                explanation = Explanation.objects.get(uri_id=uri_id)
+                delete = StepModule.objects.get(step=step, explanation=explanation)
             else:
-                image = Image.objects.get(uri_id = uri_id)
-                delete = StepExplanation.objects.get(step = step, image = image)
-            max_pos = StepExplanation.objects.filter(step = step).aggregate(Max('pos'))['pos__max']
+                image = Image.objects.get(uri_id=uri_id)
+                delete = StepModule.objects.get(step=step, image=image)
+            max_pos = StepModule.objects.filter(step=step).aggregate(Max('pos'))['pos__max']
             pos = delete.pos
 
             delete.delete()
 
             if pos != max_pos: # Move all following steps up
-                StepExplanation.objects.filter(step = step) \
-                                 .filter(pos__gt = pos) \
-                                 .filter(pos__lte = max_pos) \
-                                 .update(pos = F('pos') - 1)
+                StepModule.objects.filter(step=step) \
+                                 .filter(pos__gt=pos) \
+                                 .filter(pos__lte=max_pos) \
+                                 .update(pos=F('pos') - 1)
 
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)

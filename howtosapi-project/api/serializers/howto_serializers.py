@@ -28,8 +28,9 @@ class HowToDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HowTo
-        fields = ('uri_id', 'title', 'created', 'updated', 'description', 'steps_url', 'steps')
-        read_only_fields = ['uri_id', 'created', 'updated']
+        fields = ('uri_id', 'created', 'updated', 'is_published' ,
+                  'publish_date', 'title', 'description', 'steps_url', 'steps')
+        read_only_fields = ['uri_id', 'created', 'updated', 'is_published' , 'publish_date',]
     
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True

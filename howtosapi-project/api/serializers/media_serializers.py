@@ -6,3 +6,8 @@ class ImageSerializer(serializers.ModelSerializer):
     class Meta():
         model = Image
         fields = ['uri_id', 'type', 'image', 'title', 'caption', 'created', 'updated']
+
+class ImageDetailSerializer(serializers.ModelSerializer):
+    class Meta():
+        model = Image
+        fields = ['uri_id', 'type', 'image', 'title', 'caption', 'created', 'updated']

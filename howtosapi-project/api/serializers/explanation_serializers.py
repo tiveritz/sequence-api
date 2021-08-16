@@ -5,9 +5,6 @@ from ..functions.uri_id import generate_uri_id
 
 
 class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
-    uri_id = serializers.SlugRelatedField(read_only=True,
-                                          slug_field='uri_id',)
-
     url = serializers.HyperlinkedIdentityField(
         view_name = 'explanation-detail',
         lookup_field = 'uri_id',)
@@ -27,12 +24,10 @@ class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
 
 
 class ExplanationDetailSerializer(serializers.ModelSerializer):
-    uri_id = serializers.SlugRelatedField(read_only=True,
-                                          slug_field='uri_id',)
-
     class Meta:
         model = Explanation
         fields = ['uri_id', 'type', 'title', 'created', 'updated', 'content']
+        read_only_fields = ['uri_id', 'created', 'updated']
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -40,8 +35,6 @@ class ExplanationDetailSerializer(serializers.ModelSerializer):
 
 
 class ExplanationSimpleSerializer(serializers.ModelSerializer):
-    uri_id = serializers.SlugRelatedField(read_only=True,
-                                          slug_field='uri_id',)
     url = serializers.HyperlinkedIdentityField(
         view_name='explanation-detail',
         lookup_field='uri_id',)

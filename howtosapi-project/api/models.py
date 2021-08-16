@@ -14,9 +14,11 @@ class HowTo(AutoUriId, models.Model):
         max_length=8,
         default='00000000',
         primary_key=True)
-    title = models.CharField(max_length=128, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    is_published = models.BooleanField(default=False)
+    publish_date = models.DateTimeField(null=True)
+    title = models.CharField(max_length=128, blank=True)
     description = models.CharField(max_length=1024, blank=True)
     
     @property
@@ -57,14 +59,18 @@ class Step(AutoUriId, models.Model):
         return modules
 
     @property
+    def explanations(self):
+        explanations = StepModule.objects.filter(step=self)
+        return Explanation.objects.filter(stepmodule__in=explanations).order_by('stepmodule__pos')
+
+    @property
     def images(self):
         images = StepModule.objects.filter(step=self)
-        return Image.objects.filter(stepexplanation__in=images).order_by('stepexplanation__pos')
-
+        return Image.objects.filter(stepmodule__in=images).order_by('stepmodule__pos')
 
     @property
     def is_super(self):
-        return True if SuperStep.objects.filter(super_id=self.id).exists() else False
+        return True if SuperStep.objects.filter(super=self).exists() else False
 
     def __str__(self):
         return f'{self.uri_id}, {self.title}'
@@ -111,7 +117,7 @@ class Explanation(AutoUriId, models.Model):
         ('text', 'Text'),
         ('code', 'Code'),
     )
-    type = models.CharField(max_length = 32, choices=TYPE_CHOICES)
+    type = models.CharField(max_length=32, choices=TYPE_CHOICES)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     title = models.CharField(max_length=128, blank=True)
@@ -126,7 +132,8 @@ class Image(AutoUriId, models.Model):
         max_length=8,
         default='00000000',
         primary_key=True)
-    image = models.ImageField(blank=False, null=False)
+    # Empty allowed because we have to create objects to name image with uri_id
+    image = models.ImageField(blank=True, null=True)
     title = models.CharField(max_length=128, blank=True)
     caption = models.CharField(max_length=128, blank=True, null=True)
     created = models.DateTimeField(auto_now_add=True)
@@ -159,5 +166,38 @@ class StepModule(models.Model):
         )
     pos = models.IntegerField()
 
-    def __str__(self):
-        return f'Step {self.step.uri_id} -> Explanation {self.explanation.uri_id}: pos {self.pos}'
+
+class GuideHowTo(models.Model):
+    uri_id = models.CharField(
+        max_length=8,
+        primary_key=True)
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    title = models.CharField(max_length=128)
+    first = models.CharField(max_length=8)
+    first_ref = models.CharField(max_length=8)
+    steps = models.JSONField()
+
+
+class GuideStep(models.Model):
+    uri_id = models.CharField(
+        max_length=8)
+    ref_id = models.CharField(
+        max_length=8,
+        primary_key=True) #additional id if one step occurs in guide multiple times
+    howto = models.ForeignKey(
+        GuideHowTo,
+        on_delete = models.CASCADE,
+        )
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+    howto_title = models.CharField(max_length=128, blank=True)
+    title = models.CharField(max_length=128)
+    steps = models.JSONField()
+    first = models.CharField(max_length=8)
+    first_ref = models.CharField(max_length=8)
+    previous = models.CharField(max_length=8, blank=True)
+    previous_ref = models.CharField(max_length=8, blank=True)
+    next = models.CharField(max_length=8, blank=True)
+    next_ref = models.CharField(max_length=8, blank=True)
+    content = models.CharField(max_length=4096, blank=True)

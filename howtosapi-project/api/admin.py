@@ -7,7 +7,9 @@ from .models import (HowTo,
                      SuperStep,
                      Explanation,
                      StepModule,
-                     Image)
+                     Image,
+                     GuideHowTo,
+                     GuideStep,)
 
 admin.site.register(HowTo)
 admin.site.register(Step)
@@ -16,3 +18,6 @@ admin.site.register(SuperStep)
 admin.site.register(Explanation)
 admin.site.register(StepModule)
 admin.site.register(Image)
+admin.site.register(GuideHowTo)
+admin.site.register(GuideStep)
+
