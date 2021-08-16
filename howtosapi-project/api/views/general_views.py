@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import HowTo, Super, Step, Explanation, Image
+from ..models import HowTo, Step, SuperStep, Explanation, Image
 
 
 class StatisticView(APIView):
@@ -15,12 +15,12 @@ class StatisticView(APIView):
         steps_count = Step.objects.count()
         images_count = Image.objects.count()
 
-        superstep_ids = Super.objects.values_list('super_id__id', flat = True)
-        substeps_count = Step.objects.exclude(id__in = superstep_ids).count()
+        superstep_ids = SuperStep.objects.values_list('super__uri_id', flat=True)
+        substeps_count = Step.objects.exclude(uri_id__in = superstep_ids).count()
         supersteps_count = superstep_ids.count()
 
-        text_modules_count = Explanation.objects.filter(type = 'text').count()
-        code_modules_count = Explanation.objects.filter(type = 'code').count()
+        text_modules_count = Explanation.objects.filter(type='text').count()
+        code_modules_count = Explanation.objects.filter(type='code').count()
         modules_count = images_count + text_modules_count + code_modules_count
         
         return Response({'how_tos': how_tos_count,

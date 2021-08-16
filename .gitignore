@@ -118,3 +118,4 @@ media/
 /bin
 pyvenv.cfg
 secrets/
+man/
