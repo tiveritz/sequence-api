@@ -200,11 +200,13 @@ class HowToPublishView(APIView):
             return rendered
         return ''
 
-    def recursive_stepdict(self, step, level, pos):
+    def recursive_stepdict(self, step, level, number):
         stepdict = {}
+        number[level] += 1
+
         stepdict[step.uri_id] = {
             'ref_id': generate_uri_id(),
-            'number': '{}.{}'.format(level+1, pos),
+            'number': '.'.join([str(pos) for pos in number]),
             'title': step.title,
             'current': False,
             'level': level,
@@ -212,11 +214,11 @@ class HowToPublishView(APIView):
 
         if step.substeps:
             level += 1
-            pos = 1
+            new_number = number[:]
+            new_number.append(0)
             for step in step.substeps:
-                substepdict = self.recursive_stepdict(step, level, pos)
+                substepdict = self.recursive_stepdict(step, level, new_number)
                 stepdict = {**stepdict, **substepdict}
-                pos += 1
         return stepdict
 
     def recursive_guide_step(self, guide_howto, step, stepdict, steplist):
@@ -293,10 +295,9 @@ class HowToPublishView(APIView):
 
         # Generate stepdict
         stepdict = {}
-        pos = 1
+        number = [0]
         for step in steps:
-            stepdict = {**stepdict, **self.recursive_stepdict(step, 0, pos)}
-            pos += 1
+            stepdict = {**stepdict, **self.recursive_stepdict(step, 0, number)}
         steplist = list(stepdict.keys())
 
         json_stepdict = {}
