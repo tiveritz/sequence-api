@@ -1,5 +1,6 @@
 from django.db import models
 from .functions.uri_id import generate_uri_id
+from multiselectfield import MultiSelectField
 
 
 class AutoUriId():
@@ -167,12 +168,30 @@ class StepModule(models.Model):
     pos = models.IntegerField()
 
 
-class GuideHowTo(models.Model):
+class GuideHowTo(AutoUriId, models.Model):
+    TEST = 'TST'
+    PREVIEW = 'PRV'
+    PUBLIC = 'PBL'
+    PRIVATE = 'PRV'
+    SPACES_CHOICES = [
+        (TEST, 'test'),
+        (PREVIEW, 'preview'),
+        (PUBLIC, 'public'),
+        (PRIVATE, 'private'),
+    ]
     uri_id = models.CharField(
         max_length=8,
+        default='00000000',
         primary_key=True)
+    howto_uri_id = models.CharField(
+        max_length=8)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
+    space = models.CharField(
+        max_length=3,
+        choices=SPACES_CHOICES,
+        default=TEST,
+    )
     title = models.CharField(max_length=128)
     first = models.CharField(max_length=8)
     first_ref = models.CharField(max_length=8)

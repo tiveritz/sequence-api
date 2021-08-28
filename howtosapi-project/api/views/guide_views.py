@@ -38,7 +38,7 @@ class HowToGuideView(APIView):
     View to How To Guide
     """
     def get(self, request, uri_id):
-        guide_howto = GuideHowTo.objects.get(uri_id=uri_id)
+        guide_howto = GuideHowTo.objects.get(howto_uri_id=uri_id)
         serializer = HowToGuideSerializer(guide_howto,
                                           context={'request' : request})
         return Response(serializer.data)
