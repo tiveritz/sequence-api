@@ -36,7 +36,7 @@ urlpatterns = [
     # Guide Views
     path('guides/howto/', guide_views.HowToGuideListView.as_view(), name='howto-guide-list'),
     path('guides/howto/step/', guide_views.StepGuideListView.as_view(), name='step-guide-list'),
-    path('guides/howto/<str:uri_id>/', guide_views.HowToGuideView.as_view(), name='howto-guide'),
+    path('guides/howto/<str:uri_id>/<str:space>/', guide_views.HowToGuideView.as_view(), name='howto-guide'),
     path('guides/howto/<str:howto_uri_id>/<str:step_uri_id>/<str:ref_id>/', guide_views.StepGuideView.as_view(), name='step-guide'),
 
     # Media Views
