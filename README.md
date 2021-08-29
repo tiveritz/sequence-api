@@ -102,15 +102,3 @@ Depending on the complexity and time of the project various features can be impl
 * Internal / External links can be managed
 * Module Knowledge Base
 * Module Knowledge Base contains Explanations
-
-
-## Requirements
-cryptography==3.4.7
-Django==3.2.4
-django-filter==2.4.0
-djangorestframework==3.12.4
-mysqlclient==2.0.3
-python-dotenv==0.18.0
-Pillow==8.3.1
-django-nose==1.4.7
-coverage==5.5

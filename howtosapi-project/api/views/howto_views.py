@@ -283,9 +283,22 @@ class HowToPublishView(APIView):
                 self.recursive_guide_step(guide_howto, step, stepdict, steplist)
 
     def post(self, request, uri_id):
+        spaces = request.data['spaces']
+        
+        spaces_dict = {
+            'test': 'TST',
+            'preview': 'PRV',
+            'public': 'PBL',
+            'private': 'PRV',
+        }
+         
         # Delete previous published data
-        if GuideHowTo.objects.filter(uri_id=uri_id).exists():
-            GuideHowTo.objects.get(uri_id=uri_id).delete()
+        for space in spaces:
+            try:
+                GuideHowTo.objects.get(howto_uri_id=uri_id,
+                                       space=spaces_dict[space]).delete()
+            except GuideHowTo.DoesNotExist:
+                pass  # The GuideHowTo was not published before. Nothing to do
 
         # Get How To
         howto = HowTo.objects.get(uri_id=uri_id)
@@ -317,17 +330,19 @@ class HowToPublishView(APIView):
             step_pos += 1
 
         # Write GuideHowTo
-        guide_howto = GuideHowTo.objects.create(
-            uri_id=howto.uri_id,
-            title=howto.title,
-            first=steps[0].uri_id,
-            first_ref=stepdict[steps[0].uri_id]['ref_id'],
-            steps=json_stepdict,
-        )
+        for space in spaces:
+            guide_howto = GuideHowTo.objects.create(
+                howto_uri_id=howto.uri_id,
+                space=spaces_dict[space],
+                title=howto.title,
+                first=steps[0].uri_id,
+                first_ref=stepdict[steps[0].uri_id]['ref_id'],
+                steps=json_stepdict,
+            )
 
-        # Write GuideStep
-        for step in steps:
-            self.recursive_guide_step(guide_howto, step, stepdict, steplist)
+            # Write GuideStep
+            for step in steps:
+                self.recursive_guide_step(guide_howto, step, stepdict, steplist)
 
         # Save Successful publish to How To
         howto.is_published=True
