@@ -5,7 +5,7 @@ from ..models import GuideHowTo, GuideStep
 class HowToGuideSerializer(serializers.ModelSerializer):
     class Meta:
         model = GuideHowTo
-        fields = ('uri_id', 'title', 'first', 'first_ref', 'steps')
+        fields = ('howto_uri_id', 'title', 'first', 'first_ref', 'steps')
 
 class StepGuideSerializer(serializers.ModelSerializer):
     class Meta:
