@@ -13,8 +13,14 @@ class HowToGuideListView(APIView):
     """
     View to How To Guide List
     """
-    def get(self, request):
-        guide_howto = GuideHowTo.objects.all()
+    def get(self, request, space):
+        spaces_dict = {
+            'test': 'TST',
+            'preview': 'PRV',
+            'public': 'PBL',
+            'private': 'PRV',
+        }
+        guide_howto = GuideHowTo.objects.filter(space = spaces_dict[space])
         serializer = HowToGuideSerializer(guide_howto,
                                           many=True,
                                           context={'request' : request})
