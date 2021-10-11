@@ -193,8 +193,9 @@ class ImageTest(APITestCase):
         self.assertTrue(is_match, msg)
 
         msg = 'Created image name is not correct'
-        image_name = response.data['image'].split('/')[-1]
-        self.assertEqual(image_name, response.data['uri_id'] + '.png', msg)
+        image_name = '/' + response.data['uri_id'] + '.png'
+        is_correct = image_name in response.data['image']
+        self.assertTrue(is_correct, msg)
 
     def test_add_jpg_image(self):
         """
@@ -221,8 +222,9 @@ class ImageTest(APITestCase):
         self.assertTrue(is_match, msg)
 
         msg = 'Created image name is not correct'
-        image_name = response.data['image'].split('/')[-1]
-        self.assertEqual(image_name, response.data['uri_id'] + '.jpg', msg)
+        image_name = '/' + response.data['uri_id'] + '.jpg'
+        is_correct = image_name in response.data['image']
+        self.assertTrue(is_correct, msg)
 
     def test_add_image_module_to_step(self):
         """

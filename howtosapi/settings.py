@@ -32,10 +32,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api',
+     
+    # Third party
+    'storages',
     'rest_framework',
     'django_filters',
     'django_nose',
+    
+    # Own
+    'api',
 ]
 
 REST_FRAMEWORK = {
@@ -89,12 +94,12 @@ WSGI_APPLICATION = 'howtosapi.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': app_settings.DB_NAME,
-        'USER': app_settings.DB_USER,
-        'PASSWORD': app_settings.DB_PASS,
-        'HOST': app_settings.DB_HOST,
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASS'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -136,14 +141,30 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 # Static files
-STATIC_URL = '/static/'
+#STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
-STATIC_ROOT = '/home/api.tiveritz.at/public_html/howtosapi-project/public/static/'
+STATIC_ROOT = '/data/'
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-MEDIA_URL = '/media/'
-MEDIA_URL = app_settings.MEDIA_URL
-MEDIA_ROOT = app_settings.MEDIA_ROOT
+
+#MEDIA_URL = '/media/'
+#MEDIA_URL = app_settings.MEDIA_URL
+#MEDIA_ROOT = app_settings.MEDIA_ROOT
+
+
+#Storage Bucket
+AWS_STORAGE_BUCKET_NAME = 'tiverspace'
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_ENDPOINT_URL = 'https://fra1.digitaloceanspaces.com'
+
+STATICFILES_LOCATION = 'howtos/api/static'
+STATICFILES_STORAGE = 'howtosapi.storages.StaticRootS3Boto3Storage'
+STATIC_URL = '{}/{}/'.format(AWS_S3_ENDPOINT_URL, STATICFILES_LOCATION)
+
+MEDIAFILES_LOCATION = 'howtos/api/media'
+DEFAULT_FILE_STORAGE = 'howtosapi.storages.MediaRootS3Boto3Storage'
+MEDIA_URL = '{}/{}/'.format(AWS_S3_ENDPOINT_URL, MEDIAFILES_LOCATION)
