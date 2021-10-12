@@ -1,9 +1,11 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+import re
 
 from ..models import (GuideHowTo,
-                      GuideStep)
+                      GuideStep,
+                      Image)
 
 from ..serializers.guide_serializers import (HowToGuideSerializer,
                                              StepGuideSerializer,)
@@ -68,4 +70,19 @@ class StepGuideView(APIView):
         
         serializer = StepGuideSerializer(guide_step,
                                          context={'request' : request})
-        return Response(serializer.data)
+        serialized_data = serializer.data
+        serialized_data['content'] = self.insert_media_url(serialized_data['content'])
+        return Response(serialized_data)
+    
+    def insert_media_url(self, content):
+        # It is required to generate the media urls every time. Reaseon is that
+        # media is serverd over AWS Bucket
+        pattern = re.compile(r'(?:\[\[img\|)([a-z0-9]{8})(?:\]\])') or False
+        image_ids = re.findall(pattern, content)
+        
+        if image_ids:
+            for image_id in image_ids:
+                image = Image.objects.get(uri_id=image_id)
+                replace = '[[img|' + image_id + ']]'
+                content = content.replace(replace, image.image.url)
+        return content

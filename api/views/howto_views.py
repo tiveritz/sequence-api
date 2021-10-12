@@ -192,9 +192,8 @@ class HowToPublishView(APIView):
                     rendered += content
 
                 elif module.type == 'image':
-                    img_url = settings.MEDIA_URL + module.image.name
-                    img = '<img class="module-image" src="{}" alt="{}">\n'.format(
-                        img_url, module.caption
+                    img = '<img class="module-image" src="[[img|{}]]" alt="{}">\n'.format(
+                        module.uri_id, module.caption
                     )
                     rendered += img
             return rendered
