@@ -141,7 +141,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 # Static files
-#STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 STATIC_ROOT = '/data/'
 STATICFILES_FINDERS = (
@@ -149,16 +148,13 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
 
-
+#STATIC_URL = '/static/'
 #MEDIA_URL = '/media/'
-#MEDIA_URL = app_settings.MEDIA_URL
-#MEDIA_ROOT = app_settings.MEDIA_ROOT
 
-
-#Storage Bucket
+# Storage Bucket
 AWS_STORAGE_BUCKET_NAME = 'tiverspace'
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = os.getenv('AWS_S3_SECRET_ACCESS_KEY')
 AWS_S3_ENDPOINT_URL = 'https://fra1.digitaloceanspaces.com'
 
 STATICFILES_LOCATION = 'howtos/api/static'
