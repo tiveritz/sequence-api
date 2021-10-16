@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from ..models import HowTo, Step, SuperStep, Explanation, Image
@@ -10,7 +11,7 @@ class StatisticView(APIView):
     def get(self, request):
         """
         Return statisitcal data
-        """
+        """        
         how_tos_count = HowTo.objects.count()
         steps_count = Step.objects.count()
         images_count = Image.objects.count()
@@ -23,7 +24,8 @@ class StatisticView(APIView):
         code_modules_count = Explanation.objects.filter(type='code').count()
         modules_count = images_count + text_modules_count + code_modules_count
         
-        return Response({'how_tos': how_tos_count,
+        return Response({'version': settings.VERSION,
+                         'how_tos': how_tos_count,
                          'steps': steps_count,
                          'supersteps': supersteps_count,
                          'substeps': substeps_count,

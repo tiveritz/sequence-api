@@ -22,6 +22,7 @@ DEBUG = app_settings.DEBUG
 
 ALLOWED_HOSTS = app_settings.ALLOWED_HOSTS
 
+VERSION = os.getenv('VERSION')
 
 # Application definition
 
