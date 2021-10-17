@@ -1,0 +1,41 @@
+name: Deploy to Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Deployment Version'
+        required: true
+
+jobs:
+  build_and_push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Build Image
+      run: docker build -t registry.digitalocean.com/tiveritz/howtos-api:${{ github.event.inputs.version }} .
+
+    - name: Install doctl 
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+    - name: Log in to DO Container Registry 
+      run: doctl registry login --expiry-seconds 600
+
+    - name: Push Image to DO Container Registry 
+      run: docker push registry.digitalocean.com/tiveritz/howtos-api:${{ github.event.inputs.version }}
+
+    - name: Set up kubectl
+      uses: matootie/dokube@v1.3.4
+      with:
+        personalAccessToken: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        clusterName: k8s-prod
+
+    - name: Configure k8s File
+      run: sed -i "s|{{version}}|${{ github.event.inputs.version }}|g" k8s-prod.yml
+
+    - name: Update Namespace
+      run: kubectl apply -f k8s-prod.yml -n howtos-prod
