@@ -168,7 +168,7 @@ class ModulesTest(APITestCase):
         self.assertEqual(len(modules), 0, msg)
 
 class ImageTest(APITestCase):
-    def test_add_png_image(self):
+    def test_add_delete_png_image(self):
         """
         Ensure client can add a image
         """
@@ -177,25 +177,35 @@ class ImageTest(APITestCase):
         data = {
             "image": image
         }
-        response = self.client.post(url, data)
+        response_post = self.client.post(url, data)
 
         msg = 'HTTP status return code is not 201'
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, msg)
+        self.assertEqual(response_post.status_code, status.HTTP_201_CREATED, msg)
 
         msg = 'Created title is not correct'
-        self.assertEqual(response.data['title'], 'test_image.png', msg)
+        self.assertEqual(response_post.data['title'], 'test_image.png', msg)
 
         msg = 'Created Uri ID is not correct'
         # Matches any word with lower letters, numbers with a exact length of
         # 8 characters
         pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(response.data['uri_id'])) or False
+        is_match = re.match(pattern, str(response_post.data['uri_id'])) or False
         self.assertTrue(is_match, msg)
 
         msg = 'Created image name is not correct'
-        image_name = '/' + response.data['uri_id'] + '.png'
-        is_correct = image_name in response.data['image']
+        image_name = '/' + response_post.data['uri_id'] + '.png'
+        is_correct = image_name in response_post.data['image']
         self.assertTrue(is_correct, msg)
+        
+        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        msg = 'Image deletion does not work'
+        response_delete = self.client.delete(url)
+        self.assertEqual(response_delete.status_code, status.HTTP_204_NO_CONTENT, msg)
+        
+        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        response_get = self.client.get(url)
+        self.assertEqual(response_get.status_code, status.HTTP_404_NOT_FOUND, msg)
+
 
     def test_add_jpg_image(self):
         """
@@ -206,25 +216,34 @@ class ImageTest(APITestCase):
         data = {
             "image": image
         }
-        response = self.client.post(url, data)
+        response_post = self.client.post(url, data)
 
         msg = 'HTTP status return code is not 201'
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED, msg)
+        self.assertEqual(response_post.status_code, status.HTTP_201_CREATED, msg)
 
         msg = 'Created title is not correct'
-        self.assertEqual(response.data['title'], 'test_image.jpg', msg)
+        self.assertEqual(response_post.data['title'], 'test_image.jpg', msg)
 
         msg = 'Created Uri ID is not correct'
         # Matches any word with lower letters, numbers with a exact length of
         # 8 characters
         pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(response.data['uri_id'])) or False
+        is_match = re.match(pattern, str(response_post.data['uri_id'])) or False
         self.assertTrue(is_match, msg)
 
         msg = 'Created image name is not correct'
-        image_name = '/' + response.data['uri_id'] + '.jpg'
-        is_correct = image_name in response.data['image']
+        image_name = '/' + response_post.data['uri_id'] + '.jpg'
+        is_correct = image_name in response_post.data['image']
         self.assertTrue(is_correct, msg)
+
+        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        msg = 'Image deletion does not work'
+        response_delete = self.client.delete(url)
+        self.assertEqual(response_delete.status_code, status.HTTP_204_NO_CONTENT, msg)
+        
+        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        response_get = self.client.get(url)
+        self.assertEqual(response_get.status_code, status.HTTP_404_NOT_FOUND, msg)
 
     def test_add_image_module_to_step(self):
         """
@@ -253,4 +272,8 @@ class ImageTest(APITestCase):
         response_module = self.client.post(url, data, format='json')
 
         msg = 'HTTP status return code is not 201'
-        self.assertEqual(response_module.status_code, status.HTTP_201_CREATED, msg)     
+        self.assertEqual(response_module.status_code, status.HTTP_201_CREATED, msg)
+        
+        # Delete Image
+        url = reverse('image-detail', args=[response_image.data['uri_id']])
+        response_delete = self.client.delete(url)

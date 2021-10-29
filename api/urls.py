@@ -41,6 +41,7 @@ urlpatterns = [
 
     # Media Views
     path('media/images/', media_views.ImageView.as_view(), name='images'),
+    path('media/images/<str:uri_id>', media_views.ImageDetailView.as_view(), name='image-detail'),
     path('media/<str:uri_id>.<str:media_type>/', media_views.ImageRenderView.as_view(), name='images-render'),
 ]
 
