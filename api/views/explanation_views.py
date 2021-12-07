@@ -16,7 +16,7 @@ class ExplanationView(APIView):
                                            many=True,
                                            context={'request': request})
         return Response(serializer.data)
-    
+
     def post(self, request, format=None):
         serializer = ExplanationSerializer(data=request.data,
                                            context={'request': request})
@@ -44,9 +44,9 @@ class ExplanationDetailView(APIView):
     def patch(self, request, uri_id):
         explanation = Explanation.objects.get(uri_id=uri_id)
         serializer = ExplanationDetailSerializer(explanation,
-                                          data=request.data,
-                                          partial=True,
-                                          context={'request': request})
+                                                 data=request.data,
+                                                 partial=True,
+                                                 context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,

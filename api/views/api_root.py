@@ -11,6 +11,6 @@ class APIRoot(APIView):
             'steps': reverse('step-list', request=request),
             'explanations': reverse('explanation', request=request),
             'images': reverse('images', request=request),
-            #'howto_guides' : reverse('howto-guide-list', request=request),
-            #'step_guides' : reverse('step-guide-list', request=request),
+            # 'howto_guides' : reverse('howto-guide-list', request=request),
+            # 'step_guides' : reverse('step-guide-list', request=request),
         })

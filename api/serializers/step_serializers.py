@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.db.models import Max
-from ..models import Step, SuperStep, Explanation, StepModule, Image
+from ..models import Step, SuperStep, DecisionStep, Module, StepModule, Explanation, Image
 from ..functions.uri_id import generate_uri_id
 from ..functions.circular_reference import has_circular_reference
 from .recursive_serializers import RecursiveField
@@ -13,7 +13,7 @@ class StepSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'created', 'updated', 'is_super', 'url')
+        fields = ('uri_id', 'title', 'created', 'updated', 'is_super', 'is_decision', 'url')
 
     def create(self, validated_data):
         """
@@ -28,26 +28,32 @@ class StepSimpleSerializer(serializers.HyperlinkedModelSerializer):
         lookup_field='uri_id',)
     
     substeps = RecursiveField(many=True)
+    decisionsteps = RecursiveField(many=True)
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'is_super', 'url', 'substeps')
+        fields = ('uri_id', 'title', 'is_super', 'is_decision', 'url', 'substeps', 'decisionsteps')
 
 
 class StepDetailSerializer(serializers.ModelSerializer): 
     substeps_url = serializers.HyperlinkedIdentityField(
         view_name='sub-step',
         lookup_field='uri_id',)
+    decisionsteps_url = serializers.HyperlinkedIdentityField(
+        view_name='decision-step',
+        lookup_field='uri_id',)
     modules_url = serializers.HyperlinkedIdentityField(
         view_name='step-module',
         lookup_field='uri_id',)
     substeps = StepSimpleSerializer(many=True, read_only=True, context='context')
+    decisionsteps = StepSimpleSerializer(many=True, read_only=True, context='context')
     modules = ModuleListSerializer(many=True, read_only=True, context='context')
 
     class Meta:
         model = Step
         fields = ('uri_id', 'title', 'created', 'updated', 'description',
-                  'substeps_url', 'substeps', 'modules_url', 'modules')
+                  'substeps_url', 'substeps', 'decisionsteps_url', 'decisionsteps',
+                  'modules_url', 'modules')
         read_only_fields = ['uri_id', 'created', 'updated']
     
     def partial_update(self, request, *args, **kwargs):
@@ -103,6 +109,55 @@ class SubstepSerializer(serializers.Serializer):
         return data
 
 
+class DecisionStepSerializer(serializers.Serializer):
+    uri_id = serializers.CharField(max_length=8)
+    super_uri_id = serializers.CharField(max_length=8)
+
+    def create(self, validated_data):
+        """
+        Link a step to a Decision Step
+        """
+        super_uri_id = validated_data['super_uri_id']
+        decision_uri_id = validated_data['uri_id']
+
+        super = Step.objects.get(uri_id=super_uri_id)
+        decision = Step.objects.get(uri_id=decision_uri_id)
+
+        # Set position
+        decision_steps = DecisionStep.objects.filter(super=super)
+        super_max_pos = decision_steps.aggregate(Max('pos'))
+        pos = super_max_pos['pos__max']
+        new_pos = 0 if pos == None else pos + 1
+
+        decision_step = DecisionStep.objects.create(super=super,
+                                              decision=decision,
+                                              pos=new_pos)
+        return decision_step
+
+    def validate(self, data):
+        super_uri_id = data['super_uri_id']
+        decision_uri_id = data['uri_id']
+
+        # Check for duplicate
+        super = Step.objects.get(uri_id=super_uri_id)
+        decision = Step.objects.get(uri_id=decision_uri_id)
+
+        is_decision_step = DecisionStep.objects.filter(super=super,
+                                              decision=decision).exists()
+
+        if is_decision_step:
+            msg = 'Step already linked to DecisionStep. Duplicate not allowed'
+            raise serializers.ValidationError(msg)
+        
+        # TODO: check decision tree for circular reference
+        # Check for circular reference
+        #if has_circular_reference(decision, super):
+        #    msg = 'Step already linked to Decision Step. Circular reference not allowed'
+        #    raise serializers.ValidationError(msg)
+
+        return data
+
+
 class StepModuleSerializer(serializers.Serializer):
     uri_id = serializers.CharField(max_length=8)
     step_uri_id = serializers.CharField(max_length=8)
@@ -118,25 +173,24 @@ class StepModuleSerializer(serializers.Serializer):
         step = Step.objects.get(uri_id = step_uri_id)
 
         # Set position
-        explanations = StepModule.objects.filter(step=step)
-        explanation_max_pos = explanations.aggregate(Max('pos'))
-        pos = explanation_max_pos['pos__max']
+        step_modules = StepModule.objects.filter(step=step)
+        modules_max_pos = step_modules.aggregate(Max('pos'))
+        pos = modules_max_pos['pos__max']
         new_pos = 0 if pos == None else pos + 1
 
         # Set linked content
         if validated_data['type'] == 'explanation':
             explanation = Explanation.objects.get(uri_id=uri_id)
-            step_explanation = StepModule.objects.create(step=step,
-                                                         explanation=explanation,
-                                                         pos=new_pos)
+            module = Module.objects.create(explanation=explanation)
+            step_module = StepModule.objects.create(step=step, module=module, pos=new_pos)
         elif validated_data['type'] == 'image':
             image = Image.objects.get(uri_id=uri_id)
-            step_explanation = StepModule.objects.create(step=step,
-                                                         image=image,
-                                                         pos=new_pos)
+            module = Module.objects.create(image=image)
+            step_module = StepModule.objects.create(step=step, module=module, pos=new_pos)
         
-        return step_explanation
+        return step_module
 
+'''
     def validate(self, data):
         step_uri_id = data['step_uri_id']
         uri_id = data['uri_id']
@@ -147,11 +201,13 @@ class StepModuleSerializer(serializers.Serializer):
 
         if type == 'explanation':
             explanation = Explanation.objects.get(uri_id=uri_id)
-            has_duplicate = StepModule.objects.filter(step=step,
+            step_modules = Module.objects.filter(stepmodule__step_id=step)
+            has_duplicate = Explanation.objects.filter(module__in=step_modules,
                                                       explanation=explanation).exists()
         elif type == 'image':
             image = Image.objects.get(uri_id=uri_id)
-            has_duplicate = StepModule.objects.filter(step=step,
+            step_modules = Module.objects.filter(stepmodule__step_id=step)
+            has_duplicate = image.objects.filter(module__in=step_modules,
                                                       image=image).exists()
 
         if has_duplicate:
@@ -159,3 +215,4 @@ class StepModuleSerializer(serializers.Serializer):
             raise serializers.ValidationError(msg)
 
         return data
+'''

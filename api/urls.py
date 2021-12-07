@@ -29,6 +29,11 @@ urlpatterns = [
     path('steps/<str:uri_id>/linkablemodules/', step_views.StepLinkableModulesView.as_view(), name='step-linkable-modules'),
     path('steps/<str:uri_id>/linkableimages/', step_views.StepLinkableImagesView.as_view(), name='step-linkable-images'),
 
+    # Decision Views
+    path('steps/<str:uri_id>/decisions/', step_views.DecisionView.as_view(), name='decision-step'),
+    path('steps/<str:uri_id>/linkable-decisions/', step_views.DecisionLinkableView.as_view(), name='decision-linkable'),
+
+
     # Explanation Views
     path('explanation/', explanation_views.ExplanationView.as_view(), name='explanation'),
     path('explanation/<str:uri_id>/', explanation_views.ExplanationDetailView.as_view(), name='explanation-detail'),

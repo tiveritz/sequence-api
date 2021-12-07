@@ -4,11 +4,10 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.utils import timezone
-from django.conf import settings
 from ..functions.uri_id import generate_uri_id
 
-from ..models import (HowTo, Step, HowToStep, HowToStep, GuideHowTo,
-                      GuideStep)
+from ..models import (HowTo, Step, HowToStep, HowToStep, HowToGuide,
+                      HowToGuideStep)
 
 from ..serializers.howto_serializers import (HowToSerializer,
                                              HowToDetailSerializer,
@@ -20,13 +19,14 @@ class HowToListView(APIView):
     """
     View to How To's
     """
+
     def get(self, request):
         how_tos = HowTo.objects.all().order_by('-updated')
         serializer = HowToSerializer(how_tos,
                                      many=True,
-                                     context={'request' : request})
+                                     context={'request': request})
         return Response(serializer.data)
-    
+
     def post(self, request, format=None):
         serializer = HowToSerializer(data=request.data,
                                      context={'request': request})
@@ -42,6 +42,7 @@ class HowToDetailView(APIView):
     """
     View to How To with it's content
     """
+
     def get(self, request, uri_id):
         try:
             how_to = HowTo.objects.get(uri_id=uri_id)
@@ -49,7 +50,7 @@ class HowToDetailView(APIView):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = HowToDetailSerializer(how_to,
-                                           context={'request' : request})
+                                           context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request, uri_id):
@@ -57,7 +58,7 @@ class HowToDetailView(APIView):
         serializer = HowToDetailSerializer(how_to,
                                            data=request.data,
                                            partial=True,
-                                           context={'request' : request})
+                                           context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,
@@ -74,26 +75,27 @@ class HowToStepView(APIView):
     """
     View to Steps of a How To
     """
+
     def get(self, request, uri_id):
         how_to_steps = HowTo.objects.get(uri_id=uri_id).steps
         serializer = StepSimpleSerializer(how_to_steps,
                                           many=True,
-                                          context={'request' : request})
+                                          context={'request': request})
         return Response(serializer.data)
 
     def post(self, request, uri_id, format=None):
-        data = request.data
+        data = request.data.copy()  # TODO: only pytest complains about that
         data['how_to_uri_id'] = uri_id
         serializer = HowToStepSerializer(data=data)
-        
+
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status=status.HTTP_403_FORBIDDEN)
-    
+
     def patch(self, request, uri_id):
-        data = request.data
+        data = request.data.copy()
         method = data['method']
         how_to = HowTo.objects.get(uri_id=uri_id)
 
@@ -102,7 +104,7 @@ class HowToStepView(APIView):
             new_index = data['new_index']
             how_to_step = HowToStep.objects.get(how_to=how_to, pos=old_index)
 
-            if old_index < new_index: # Move down
+            if old_index < new_index:  # Move down
                 HowToStep.objects.filter(how_to=how_to) \
                                  .filter(pos__gt=old_index)   \
                                  .filter(pos__lte=new_index)  \
@@ -110,7 +112,7 @@ class HowToStepView(APIView):
                 how_to_step.pos = new_index
                 how_to_step.save()
 
-            if old_index > new_index: # Move up
+            if old_index > new_index:  # Move up
                 HowToStep.objects.filter(how_to=how_to) \
                                  .filter(pos__lt=old_index)   \
                                  .filter(pos__gte=new_index)  \
@@ -133,7 +135,7 @@ class HowToStepView(APIView):
 
             delete.delete()
 
-            if pos != max_pos: # Move all following steps up
+            if pos != max_pos:  # Move all following steps up
                 HowToStep.objects.filter(how_to=how_to) \
                                  .filter(pos__gt=pos)   \
                                  .filter(pos__lte=max_pos)  \
@@ -147,6 +149,7 @@ class HowToStepDetailView(APIView):
     """
     View to Steps of a How To
     """
+
     def delete(self, request, uri_id, step_uri_id):
         how_to = HowTo.objects.get(uri_id=uri_id)
         step = Step.objects.get(uri_id=step_uri_id)
@@ -159,22 +162,26 @@ class HowToLinkableView(APIView):
     """
     View to Steps that can be linked to a How To
     """
+
     def get(self, request, uri_id):
         # Can not be linked to this How To already
         forbidden_steps = HowTo.objects.get(uri_id=uri_id).steps
         forbidden_uri_ids = [step.uri_id for step in forbidden_steps]
-        steps = Step.objects.exclude(uri_id__in=forbidden_uri_ids).order_by('-updated')
+        steps = Step.objects.exclude(
+            uri_id__in=forbidden_uri_ids).order_by('-updated')
 
         serializer = StepSimpleSerializer(steps,
                                           many=True,
-                                          context={'request' : request})
+                                          context={'request': request})
         return Response(serializer.data,
                         status=status.HTTP_200_OK)
+
 
 class HowToPublishView(APIView):
     """
     View to Publish a How To
     """
+
     def render_content(self, modules):
         if modules:
             rendered = ''
@@ -188,7 +195,7 @@ class HowToPublishView(APIView):
                 elif module.type == 'code':
                     before = '<pre class="module-code">\n'
                     after = '</pre>\n'
-                    content =  before + module.content + after
+                    content = before + module.content + after
                     rendered += content
 
                 elif module.type == 'image':
@@ -233,16 +240,16 @@ class HowToPublishView(APIView):
                     'uri_id': uri_id,
                     'ref_id': stepdict_current[uri_id]['ref_id'],
                     'number': stepdict_current[uri_id]['number'],
-                    'title' : stepdict_current[uri_id]['title'],
-                    'current' : stepdict_current[uri_id]['current'],
-                    'level' : stepdict_current[uri_id]['level'],
+                    'title': stepdict_current[uri_id]['title'],
+                    'current': stepdict_current[uri_id]['current'],
+                    'level': stepdict_current[uri_id]['level'],
                 }
             }
             json_stepdict = {**json_stepdict, **step_current}
             step_pos += 1
 
         uri_id = json_stepdict[pos]['uri_id']
-        ref_id =json_stepdict[pos]['ref_id']
+        ref_id = json_stepdict[pos]['ref_id']
 
         first = json_stepdict[0]['uri_id']
         first_ref = json_stepdict[0]['ref_id']
@@ -261,7 +268,7 @@ class HowToPublishView(APIView):
 
         rendered_content = self.render_content(step.modules)
 
-        GuideStep.objects.create(
+        HowToGuideStep.objects.create(
             uri_id=uri_id,
             ref_id=ref_id,
             howto=guide_howto,
@@ -279,25 +286,26 @@ class HowToPublishView(APIView):
 
         if step.substeps:
             for step in step.substeps:
-                self.recursive_guide_step(guide_howto, step, stepdict, steplist)
+                self.recursive_guide_step(
+                    guide_howto, step, stepdict, steplist)
 
     def post(self, request, uri_id):
         spaces = request.data['spaces']
-        
+
         spaces_dict = {
             'test': 'TST',
             'preview': 'PRV',
             'public': 'PBL',
             'private': 'PRV',
         }
-         
+
         # Delete previous published data
         for space in spaces:
             try:
-                GuideHowTo.objects.get(howto_uri_id=uri_id,
+                HowToGuide.objects.get(howto_uri_id=uri_id,
                                        space=spaces_dict[space]).delete()
-            except GuideHowTo.DoesNotExist:
-                pass  # The GuideHowTo was not published before. Nothing to do
+            except HowToGuide.DoesNotExist:
+                pass  # The HowToGuide was not published before. Nothing to do
 
         # Get How To
         howto = HowTo.objects.get(uri_id=uri_id)
@@ -320,17 +328,17 @@ class HowToPublishView(APIView):
                     'uri_id': step,
                     'ref_id': stepdict[step]['ref_id'],
                     'number': stepdict[step]['number'],
-                    'title' : stepdict[step]['title'],
-                    'current' : stepdict[step]['current'],
-                    'level' : stepdict[step]['level'],
+                    'title': stepdict[step]['title'],
+                    'current': stepdict[step]['current'],
+                    'level': stepdict[step]['level'],
                 }
             }
             json_stepdict = {**json_stepdict, **step}
             step_pos += 1
 
-        # Write GuideHowTo
+        # Write HowToGuide
         for space in spaces:
-            guide_howto = GuideHowTo.objects.create(
+            guide_howto = HowToGuide.objects.create(
                 howto_uri_id=howto.uri_id,
                 space=spaces_dict[space],
                 title=howto.title,
@@ -339,13 +347,14 @@ class HowToPublishView(APIView):
                 steps=json_stepdict,
             )
 
-            # Write GuideStep
+            # Write HowToGuideStep
             for step in steps:
-                self.recursive_guide_step(guide_howto, step, stepdict, steplist)
+                self.recursive_guide_step(
+                    guide_howto, step, stepdict, steplist)
 
         # Save Successful publish to How To
-        howto.is_published=True
-        howto.publish_date=timezone.now()
+        howto.is_published = True
+        howto.publish_date = timezone.now()
         howto.save()
 
         payload = {
