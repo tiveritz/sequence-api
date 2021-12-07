@@ -5,7 +5,8 @@ from .media_serializers import ImageSerializer
 
 
 class ModuleListSerializer(serializers.Serializer):
-    """ Serializer that renders each instance with its own specific serializer """
+    """ Serializer that renders each instance with its own specific serializer
+    """
 
     @classmethod
     def get_serializer(cls, model):
@@ -13,7 +14,7 @@ class ModuleListSerializer(serializers.Serializer):
             return ExplanationDetailSerializer
         elif model == Image:
             return ImageSerializer
-            
+
     def to_representation(self, instance):
         serializer = self.get_serializer(instance.__class__)
         return serializer(instance, context=self.context).data

@@ -1,13 +1,11 @@
 from rest_framework import serializers
-from django.db.models import Max
 from ..models import Explanation
-from ..functions.uri_id import generate_uri_id
 
 
-class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
+class ExplanationSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name = 'explanation-detail',
-        lookup_field = 'uri_id',)
+        view_name='explanation-detail',
+        lookup_field='uri_id',)
 
     class Meta:
         model = Explanation
@@ -18,16 +16,14 @@ class ExplanationSerializer(serializers.HyperlinkedModelSerializer):
         Create the How To, generate a How To Uri Id and link it to the
         How To
         """
-        explanation = Explanation.objects.create(**validated_data)
-
-        return explanation
+        return Explanation.objects.create(**validated_data)
 
 
 class ExplanationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Explanation
         fields = ['uri_id', 'type', 'title', 'created', 'updated', 'content']
-        read_only_fields = ['uri_id', 'created', 'updated']
+        read_only_fields = ['uri_id', 'created', 'updated', ]
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True

@@ -18,10 +18,14 @@ class cAppSettings:
 
     def get_bool_env(self, variable_name):
         if not os.getenv(variable_name):
-            raise ImportError(f'Variable name "{variable_name}" not found in .env')
+            raise ImportError(f'Variable name "{variable_name}" not found in '
+                              '.env')
 
         var = os.getenv(variable_name).lower()
 
-        if (var == 'true'): return True
-        if (var == 'false'): return False
-        raise AttributeError('Environment variable does not equal to either true or false')
+        if (var == 'true'):
+            return True
+        if (var == 'false'):
+            return False
+        raise AttributeError('Environment variable does not equal to either '
+                             'true or false')

@@ -1,16 +1,8 @@
 from django.contrib import admin
 
 
-from .models import (HowTo,
-                     Step,
-                     HowToStep,
-                     SuperStep,
-                     Explanation,
-                     StepModule,
-                     DecisionStep,
-                     Module,
-                     Image,
-                     HowToGuide,
+from .models import (HowTo, HowToStep, Step, SuperStep, Explanation,
+                     StepModule, DecisionStep, Module, Image, HowToGuide,
                      HowToGuideStep,)
 
 admin.site.register(HowTo)
@@ -24,4 +16,3 @@ admin.site.register(Module)
 admin.site.register(Image)
 admin.site.register(HowToGuide)
 admin.site.register(HowToGuideStep)
-

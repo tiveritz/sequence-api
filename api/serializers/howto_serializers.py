@@ -1,18 +1,17 @@
 from rest_framework import serializers
 from django.db.models import Max
 from ..models import HowTo, Step, HowToStep
-from ..functions.uri_id import generate_uri_id
 from .step_serializers import StepSimpleSerializer
 
 
-class HowToSerializer(serializers.HyperlinkedModelSerializer):
+class HowToSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='how-to-detail',
                                                lookup_field='uri_id')
 
     class Meta:
         model = HowTo
-        fields = ('uri_id', 'title', 'created', 'updated', 'url')
-    
+        fields = ('uri_id', 'title', 'created', 'updated', 'url',)
+
     def create(self, validated_data):
         """
         Create a new How To
@@ -28,10 +27,12 @@ class HowToDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = HowTo
-        fields = ('uri_id', 'created', 'updated', 'is_published' ,
-                  'publish_date', 'title', 'description', 'steps_url', 'steps')
-        read_only_fields = ['uri_id', 'created', 'updated', 'is_published' , 'publish_date',]
-    
+        fields = ('uri_id', 'created', 'updated', 'is_published',
+                  'publish_date', 'title', 'description', 'steps_url',
+                  'steps',)
+        read_only_fields = ['uri_id', 'created', 'updated', 'is_published',
+                            'publish_date', ]
+
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
         return self.update(request, *args, **kwargs)
@@ -47,7 +48,7 @@ class HowToStepSerializer(serializers.Serializer):
         """
         step_uri_id = validated_data['uri_id']
         how_to_uri_id = validated_data['how_to_uri_id']
-        
+
         how_to = HowTo.objects.get(uri_id=how_to_uri_id)
         step = Step.objects.get(uri_id=step_uri_id)
 
@@ -55,12 +56,11 @@ class HowToStepSerializer(serializers.Serializer):
         how_to_steps = HowToStep.objects.filter(how_to=how_to)
         how_to_max_pos = how_to_steps.aggregate(Max('pos'))
         pos = how_to_max_pos['pos__max']
-        new_pos = 0 if pos == None else pos + 1
+        new_pos = 0 if pos is None else pos + 1
 
-        how_to_step = HowToStep.objects.create(how_to=how_to,
-                                               step=step,
-                                               pos=new_pos)
-        return how_to_step
+        return HowToStep.objects.create(how_to=how_to,
+                                        step=step,
+                                        pos=new_pos)
 
     def validate(self, data):
         step_uri_id = data['uri_id']

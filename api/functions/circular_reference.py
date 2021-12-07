@@ -1,4 +1,4 @@
-from ..models import Step, SuperStep
+from ..models import SuperStep
 
 
 def get_substep_tree(super):
@@ -15,6 +15,7 @@ def get_substep_tree(super):
             substep_tree.append(substep)
     return substep_tree
 
+
 def get_superstep_tree(sub):
     supersteps = SuperStep.objects.filter(sub=sub)
     superstep_tree = []
@@ -28,6 +29,7 @@ def get_superstep_tree(sub):
         if superstep_tree:
             superstep_tree.append(superstep)
     return superstep_tree
+
 
 def has_circular_reference(step, check):
     substeps = get_substep_tree(step)
