@@ -20,12 +20,12 @@ class HowTo(AutoUriId, models.Model):
     publish_date = models.DateTimeField(null=True)
     title = models.CharField(max_length=128, blank=True)
     description = models.CharField(max_length=1024, blank=True)
-    
+
     @property
     def steps(self):
         how_to_steps = HowToStep.objects.filter(how_to=self).order_by('pos')
         return [how_to_step.step for how_to_step in how_to_steps]
-    
+
     def __str__(self):
         return f'{self.uri_id}, {self.title}'
 
@@ -55,12 +55,14 @@ class Step(AutoUriId, models.Model):
 
     @property
     def modules(self):
-        step_modules = Module.objects.filter(stepmodule__step=self).order_by('stepmodule__pos')
+        step_modules = Module.objects.filter(
+            stepmodule__step=self).order_by('stepmodule__pos')
         modules = []
-        
+
         for module in step_modules:
             if module.explanation:
-                modules.append(Explanation.objects.get(uri_id=module.explanation_id))
+                modules.append(Explanation.objects.get(
+                    uri_id=module.explanation_id))
             elif module.image:
                 modules.append(Image.objects.get(uri_id=module.image_id))
 
@@ -69,15 +71,16 @@ class Step(AutoUriId, models.Model):
     @property
     def images(self):
         modules = Module.objects.filter(step=self).order_by('pos')
-        return Image.objects.filter(uri_id__in=modules.uri_id).order_by('module__pos')
+        return Image.objects.filter(
+            uri_id__in=modules.uri_id).order_by('module__pos')
 
     @property
     def is_super(self):
-        return True if SuperStep.objects.filter(super=self).exists() else False
+        return SuperStep.objects.filter(super=self).exists() or False
 
     @property
     def is_decision(self):
-        return True if DecisionStep.objects.filter(super=self).exists() else False
+        return DecisionStep.objects.filter(super=self).exists() or False
 
     def __str__(self):
         return f'{self.uri_id}, {self.title}'
@@ -90,15 +93,15 @@ class HowToStep(models.Model):
     how_to = models.ForeignKey(
         HowTo,
         on_delete=models.CASCADE
-        )
+    )
     step = models.ForeignKey(
         Step,
         on_delete=models.CASCADE
-        )
+    )
     pos = models.IntegerField()
 
     def __str__(self):
-        return f'How To {self.how_to.uri_id} -> Step {self.step.uri_id}: pos {self.pos}'
+        return f'{self.how_to.uri_id} -> {self.step.uri_id}: {self.pos}'
 
     class Meta:
         db_table = 'howto_step'
@@ -110,15 +113,15 @@ class SuperStep(models.Model):
         Step,
         on_delete=models.CASCADE,
         related_name='superstep'
-        )
+    )
     sub = models.ForeignKey(
         Step,
         on_delete=models.CASCADE,
         related_name='substep'
-        )
+    )
 
     def __str__(self):
-        return f'Super {self.super.uri_id} -> Step {self.sub.uri_id}: pos {self.pos}'
+        return f'{self.super.uri_id} -> {self.sub.uri_id}: {self.pos}'
 
     class Meta:
         db_table = 'superstep'
@@ -169,13 +172,13 @@ class Module(models.Model):
         on_delete=models.CASCADE,
         blank=True,
         null=True
-        )
+    )
     image = models.ForeignKey(
         Image,
         on_delete=models.CASCADE,
         blank=True,
         null=True
-        )
+    )
 
     class Meta:
         db_table = 'module'
@@ -185,18 +188,17 @@ class StepModule(models.Model):
     step = models.ForeignKey(
         Step,
         on_delete=models.CASCADE,
-        )
+    )
     pos = models.IntegerField()
     module = models.ForeignKey(
         Module,
         on_delete=models.CASCADE,
         blank=True,
         null=True
-        )
+    )
 
     class Meta:
         db_table = 'step_module'
-
 
 
 class DecisionStep(models.Model):
@@ -205,12 +207,12 @@ class DecisionStep(models.Model):
         Step,
         on_delete=models.CASCADE,
         related_name='superdecision'
-        )
+    )
     decision = models.ForeignKey(
         Step,
         on_delete=models.CASCADE,
         related_name='decisionstep'
-        )
+    )
 
     class Meta:
         db_table = 'decisionstep'
@@ -254,11 +256,11 @@ class HowToGuideStep(models.Model):
         max_length=8)
     ref_id = models.CharField(
         max_length=8,
-        primary_key=True)  # additional id if one step occurs in guide multiple times
+        primary_key=True)
     howto = models.ForeignKey(
         HowToGuide,
         on_delete=models.CASCADE,
-        )
+    )
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     howto_title = models.CharField(max_length=128, blank=True)
