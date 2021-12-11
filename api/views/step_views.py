@@ -2,7 +2,9 @@ from django.db.models import F
 from django.db.models import Max
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from core.pagination import ListPagination
 
 from ..models import (Step, SuperStep, DecisionStep, Explanation, Module,
                       StepModule, Image)
@@ -178,19 +180,13 @@ class SuperDetailView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class StepListView(APIView):
+class StepListView(ListAPIView):
     """
     View to Steps
     """
-
-    def get(self, request):
-        steps = Step.objects.all().order_by('-updated')
-        serializer = StepSerializer(
-            steps,
-            many=True,
-            context={'request': request}
-        )
-        return Response(serializer.data)
+    queryset = Step.objects.all().order_by('-updated')
+    serializer_class = StepSerializer
+    pagination_class = ListPagination
 
     def post(self, request, format=None):
         serializer = StepSerializer(data=request.data,

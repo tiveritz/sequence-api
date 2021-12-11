@@ -2,9 +2,11 @@ import copy
 from django.db.models import F
 from rest_framework import status
 from rest_framework.views import APIView
+from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from django.utils import timezone
 from ..functions.uri_id import generate_uri_id
+from core.pagination import ListPagination
 
 from ..models import (HowTo, Step, HowToStep, HowToStep, HowToGuide,
                       HowToGuideStep)
@@ -15,17 +17,13 @@ from ..serializers.howto_serializers import (HowToSerializer,
                                              StepSimpleSerializer,)
 
 
-class HowToListView(APIView):
+class HowToListView(ListAPIView):
     """
     View to How To's
     """
-
-    def get(self, request):
-        how_tos = HowTo.objects.all().order_by('-updated')
-        serializer = HowToSerializer(how_tos,
-                                     many=True,
-                                     context={'request': request})
-        return Response(serializer.data)
+    queryset = HowTo.objects.all().order_by('-updated')
+    serializer_class = HowToSerializer
+    pagination_class = ListPagination
 
     def post(self, request, format=None):
         serializer = HowToSerializer(data=request.data,
