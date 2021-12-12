@@ -4,6 +4,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
 from core.pagination import ListPagination
 
 from ..models import (Step, SuperStep, DecisionStep, Explanation, Module,
@@ -187,6 +188,9 @@ class StepListView(ListAPIView):
     queryset = Step.objects.all().order_by('-updated')
     serializer_class = StepSerializer
     pagination_class = ListPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title']
+    ordering_fields = ['title', 'created', 'updated']
 
     def post(self, request, format=None):
         serializer = StepSerializer(data=request.data,
