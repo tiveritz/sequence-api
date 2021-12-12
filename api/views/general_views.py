@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import HowTo, Step, SuperStep, Explanation, Image
+from ..models import HowTo, Step, SuperStep, DecisionStep, Explanation, Image
 
 
 class StatisticView(APIView):
@@ -22,6 +22,10 @@ class StatisticView(APIView):
         substeps_count = Step.objects.exclude(uri_id__in=superstep_ids).count()
         supersteps_count = superstep_ids.count()
 
+        decision_ids = DecisionStep.objects.values_list(
+            'super__uri_id', flat=True)
+        decisions_count = decision_ids.count()
+
         text_modules_count = Explanation.objects.filter(type='text').count()
         code_modules_count = Explanation.objects.filter(type='code').count()
         modules_count = images_count + text_modules_count + code_modules_count
@@ -31,6 +35,7 @@ class StatisticView(APIView):
                          'steps': steps_count,
                          'supersteps': supersteps_count,
                          'substeps': substeps_count,
+                         'decisions': decisions_count,
                          'modules': modules_count,
                          'text_modules': text_modules_count,
                          'code_modules': code_modules_count,
