@@ -49,15 +49,11 @@ class TestHowTo():
         assert response_get.data['title'] == data['title'], msg
 
     @pytest.mark.django_db
-    def test_update_how_to(self):
+    def test_update_how_to(self, howto):
         """
         Ensure client can update How To
         """
-        url = reverse('how-to-list')
-        data = {'title': 'Update a How To'}
-        response_post = self.api_client.post(url, data, format='json')
-
-        url = reverse('how-to-detail', args=[response_post.data['uri_id']])
+        url = reverse('how-to-detail', args=[howto.uri_id])
         status_msg = 'HTTP status return code is not 200'
         data = {
             'title': 'New Title',
@@ -75,23 +71,19 @@ class TestHowTo():
             assert response_patch.data[k] == data[k], msg
 
     @pytest.mark.django_db
-    def test_delete_how_to(self):
+    def test_delete_how_to(self, howto):
         """
         Ensure client can delete How To
         """
-        url_post = reverse('how-to-list')
-        data = {'title': 'How To'}
-        response_post = self.api_client.post(url_post, data, format='json')
-
         url_delete = reverse(
-            'how-to-detail', args=[response_post.data['uri_id']])
+            'how-to-detail', args=[howto.uri_id])
         response_delete = self.api_client.delete(url_delete, format='json')
 
         msg = 'HTTP status return code is not 204'
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
-        url_get = reverse('how-to-detail', args=[response_post.data['uri_id']])
-        response_get = self.api_client.get(url_get, data, format='json')
+        url_get = reverse('how-to-detail', args=[howto.uri_id])
+        response_get = self.api_client.get(url_get, format='json')
         msg = 'How To was not successfully deleted'
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
 
@@ -124,54 +116,39 @@ class TestHowToStep():
     api_client = APIClient()
 
     @pytest.mark.django_db
-    def test_link_unlink_step_to_how_to(self):
+    def test_link_unlink_step_to_how_to(self, howto, step):
         """
         Ensure client can link a Step to a How to, then delete it
         """
-        # Create a How To
-        url = reverse('how-to-list')
-        data = {'title': 'Linkable How To'}
-        how_to = self.api_client.post(url, data, format='json')
-
-        # Create a Step
-        url = reverse('step-list')
-        data = {'title': 'Step to link'}
-        step = self.api_client.post(url, data, format='json')
-
         # Link Step to How To
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
-        data = {'uri_id': step.data['uri_id']}
+        url = reverse('how-to-step', args=[howto.uri_id])
+        data = {'uri_id': step.uri_id}
         self.api_client.post(url, data, format='json')
 
         # Check if Step was correctly linked
-        url = reverse('how-to-detail', args=[how_to.data['uri_id']])
+        url = reverse('how-to-detail', args=[howto.uri_id])
         response = self.api_client.get(url, format='json')
 
         msg = 'Step was not linked to How To correctly'
-        assert response.data['steps'][0]['uri_id'] == step.data['uri_id'], msg
+        assert response.data['steps'][0]['uri_id'] == step.uri_id, msg
 
         # Unlink step
         url = reverse('how-to-step-detail',
-                      args=[how_to.data['uri_id'], step.data['uri_id']])
+                      args=[howto.uri_id, step.uri_id])
         response = self.api_client.delete(url, format='json')
 
         # Check if Step was correctly unlinked
-        url = reverse('how-to-detail', args=[how_to.data['uri_id']])
+        url = reverse('how-to-detail', args=[howto.uri_id])
         response = self.api_client.get(url, format='json')
 
         msg = 'Step was not unlinked from How To correctly'
         assert len(response.data['steps']) == 0, msg
 
     @pytest.mark.django_db
-    def test_rearrange_substeps(self):
+    def test_rearrange_substeps(self, howto):
         """
         Ensure client can reorder substeps
         """
-        # Create a Superstep
-        url = reverse('how-to-list')
-        data = {'title': 'Linkable How To'}
-        how_to = self.api_client.post(url, data, format='json')
-
         # Create Substeps
         url = reverse('step-list')
         data = {'title': 'Substep1'}
@@ -180,14 +157,14 @@ class TestHowToStep():
         substep2 = self.api_client.post(url, data, format='json')
 
         # Link Step to Superstep
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         data = {'uri_id': substep1.data['uri_id']}
         self.api_client.post(url, data, format='json')
         data = {'uri_id': substep2.data['uri_id']}
         self.api_client.post(url, data, format='json')
 
         # Check initial order
-        url = reverse('how-to-detail', args=[how_to.data['uri_id']])
+        url = reverse('how-to-detail', args=[howto.uri_id])
         response = self.api_client.get(url, format='json')
         steps = response.data['steps']
 
@@ -196,7 +173,7 @@ class TestHowToStep():
         assert steps[1]['uri_id'] == substep2.data['uri_id'], msg
 
         # Reorder
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         data = {'method': 'order', 'old_index': 0, 'new_index': 1}
         response = self.api_client.patch(url, data, format='json')
 
@@ -204,7 +181,7 @@ class TestHowToStep():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check new order
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         steps = self.api_client.get(url, format='json').data
 
         msg = 'Changed step position is not ok'
@@ -212,34 +189,29 @@ class TestHowToStep():
         assert steps[1]['uri_id'] == substep1.data['uri_id'], msg
 
     @pytest.mark.django_db
-    def test_delete_substep(self):
+    def test_delete_substep(self, howto):
         """
         Ensure client can delete substeps
         """
-        # Create a How To
-        url = reverse('how-to-list')
-        data = {'title': 'Linkable How To'}
-        how_to = self.api_client.post(url, data, format='json')
-
         # Create a Step
         url = reverse('step-list')
         data = {'title': 'Step to link'}
         step = self.api_client.post(url, data, format='json')
 
         # Link Step to How To
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         data = {'uri_id': step.data['uri_id']}
         self.api_client.post(url, data, format='json')
 
         # Check if Step was correctly linked
-        url = reverse('how-to-detail', args=[how_to.data['uri_id']])
+        url = reverse('how-to-detail', args=[howto.uri_id])
         response = self.api_client.get(url, format='json').data
 
         msg = 'Step was not linked to How To correctly'
         assert response['steps'][0]['uri_id'] == step.data['uri_id'], msg
 
         # Delete
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         data = {'method': 'delete', 'uri_id': response['steps'][0]['uri_id']}
         response = self.api_client.patch(url, data, format='json')
 
@@ -247,7 +219,7 @@ class TestHowToStep():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check if successfully deleted
-        url = reverse('how-to-step', args=[how_to.data['uri_id']])
+        url = reverse('how-to-step', args=[howto.uri_id])
         steps = self.api_client.get(url, format='json').data
 
         msg = 'Deleting Substep was not successfull'

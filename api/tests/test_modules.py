@@ -10,22 +10,17 @@ class TestModules():
     api_client = APIClient()
 
     @pytest.mark.django_db
-    def test_add_text_explanation_module_to_step(self):
+    def test_add_text_explanation_module_to_step(self, step):
         """
         Ensure client can add a text explanation to step
         """
-        # Create Step
-        url = reverse('step-list')
-        data = {'title': 'new'}
-        response_step = self.api_client.post(url, data, format='json')
-
         # Create Explanation
         url = reverse('explanation')
         data = {'type': 'text', 'title': 'Create and add to step'}
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {
             'uri_id': response_explanation.data['uri_id'],
             'type': 'explanation',
@@ -36,7 +31,7 @@ class TestModules():
         assert response_module.status_code == status.HTTP_201_CREATED, msg
 
         # Check if Explanation was correctly added
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         response_get = self.api_client.get(url, format='json')
 
         msg = 'Could not retrieve step module by uri_id'
@@ -45,22 +40,17 @@ class TestModules():
         assert response_uri_id == data_uri_id, msg
 
     @pytest.mark.django_db
-    def test_add_code_explanation_module_to_step(self):
+    def test_add_code_explanation_module_to_step(self, step):
         """
         Ensure client can add a code epxlanation to a step
         """
-        # Create Step
-        url = reverse('step-list')
-        data = {'title': 'new'}
-        response_step = self.api_client.post(url, data, format='json')
-
         # Create Explanation
         url = reverse('explanation')
         data = {'type': 'code', 'title': 'Create and add to step'}
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {
             'uri_id': response_explanation.data['uri_id'],
             'type': 'explanation',
@@ -71,7 +61,7 @@ class TestModules():
         assert response_module.status_code == status.HTTP_201_CREATED, msg
 
         # Check if Explanation was correctly added
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         response_get = self.api_client.get(url, format='json')
 
         msg = 'Could not retrieve step module by uri_id'
@@ -80,15 +70,10 @@ class TestModules():
         assert response_uri_id == data_uri_id, msg
 
     @pytest.mark.django_db
-    def test_rearrange_modules(self):
+    def test_rearrange_modules(self, step):
         """
         Ensure client can reorder modules
         """
-        # Create Step
-        url = reverse('step-list')
-        data = {'title': 'new'}
-        response_step = self.api_client.post(url, data, format='json')
-
         # Create Modules
         url = reverse('explanation')
         data = {'type': 'text', 'title': 'Create and add to step'}
@@ -97,7 +82,7 @@ class TestModules():
         response_code_module = self.api_client.post(url, data, format='json')
 
         # Add Modules to Step
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {
             'uri_id': response_text_module.data['uri_id'],
             'type': 'explanation',
@@ -110,7 +95,7 @@ class TestModules():
         self.api_client.post(url, data, format='json')
 
         # Check initial order
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Initial module position is not ok'
@@ -118,7 +103,7 @@ class TestModules():
         assert modules[1]['uri_id'] == response_code_module.data['uri_id'], msg
 
         # Reorder
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {'method': 'order', 'old_index': 0, 'new_index': 1}
         response = self.api_client.patch(url, data, format='json')
 
@@ -126,7 +111,7 @@ class TestModules():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check new order
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Changed module position is not ok'
@@ -134,22 +119,17 @@ class TestModules():
         assert modules[1]['uri_id'] == response_text_module.data['uri_id'], msg
 
     @pytest.mark.django_db
-    def test_delete_module(self):
+    def test_delete_module(self, step):
         """
         Ensure client can delete modules
         """
-        # Create Step
-        url = reverse('step-list')
-        data = {'title': 'new'}
-        response_step = self.api_client.post(url, data, format='json')
-
         # Create Explanation
         url = reverse('explanation')
         data = {'type': 'text', 'title': 'Create and add to step'}
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {
             'uri_id': response_explanation.data['uri_id'],
             'type': 'explanation',
@@ -157,7 +137,7 @@ class TestModules():
         self.api_client.post(url, data, format='json')
 
         # Check if Explanation was correctly linked
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         response_get = self.api_client.get(url, format='json')
 
         msg = 'Could not retrieve step module by uri_id'
@@ -166,7 +146,7 @@ class TestModules():
         assert response_uri_id == data_uri_id, msg
 
         # Delete
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {'method': 'delete',
                 'uri_id': response_explanation.data['uri_id']}
         response = self.api_client.patch(url, data, format='json')
@@ -175,7 +155,7 @@ class TestModules():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check if successfully deleted
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Deleting Substep was not successfull'
@@ -268,16 +248,10 @@ class TestImage():
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
 
     @pytest.mark.django_db
-    def test_add_image_module_to_step(self):
+    def test_add_image_module_to_step(self, step):
         """
         Ensure client can add image module to step
         """
-
-        # Create Step
-        url = reverse('step-list')
-        data = {'title': 'new'}
-        response_step = self.api_client.post(url, data, format='json')
-
         # Create Image
         url = reverse('images')
         image = SimpleUploadedFile(
@@ -288,7 +262,7 @@ class TestImage():
         response_image = self.api_client.post(url, data)
 
         # Add Image to Step
-        url = reverse('step-module', args=[response_step.data['uri_id']])
+        url = reverse('step-module', args=[step.uri_id])
         data = {
             'uri_id': response_image.data['uri_id'],
             'type': 'image',
