@@ -5,16 +5,16 @@ from ..models import Explanation
 class ExplanationSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='explanation-detail',
-        lookup_field='uri_id',)
+        lookup_field='api_id',)
 
     class Meta:
         model = Explanation
-        fields = ['uri_id', 'type', 'title', 'created', 'updated', 'url']
+        fields = ['api_id', 'type', 'title', 'created', 'updated', 'url']
 
     def create(self, validated_data):
         """
-        Create the How To, generate a How To Uri Id and link it to the
-        How To
+        Create the Sequenceo, generate a Sequenceo Uri Id and link it to the
+        Sequenceo
         """
         return Explanation.objects.create(**validated_data)
 
@@ -22,8 +22,8 @@ class ExplanationSerializer(serializers.ModelSerializer):
 class ExplanationDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Explanation
-        fields = ['uri_id', 'type', 'title', 'created', 'updated', 'content']
-        read_only_fields = ['uri_id', 'created', 'updated', ]
+        fields = ['api_id', 'type', 'title', 'created', 'updated', 'content']
+        read_only_fields = ['api_id', 'created', 'updated', ]
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -33,8 +33,8 @@ class ExplanationDetailSerializer(serializers.ModelSerializer):
 class ExplanationSimpleSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='explanation-detail',
-        lookup_field='uri_id',)
+        lookup_field='api_id',)
 
     class Meta:
         model = Explanation
-        fields = ['uri_id', 'type', 'title', 'url', 'content']
+        fields = ['api_id', 'type', 'title', 'url', 'content']

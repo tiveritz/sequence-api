@@ -10,11 +10,11 @@ from .module_serializer import ModuleListSerializer
 
 class StepSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='step-detail',
-                                               lookup_field='uri_id',)
+                                               lookup_field='api_id',)
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'created', 'updated', 'is_super',
+        fields = ('api_id', 'title', 'created', 'updated', 'is_super',
                   'is_decision', 'url',)
 
     def create(self, validated_data):
@@ -26,27 +26,27 @@ class StepSerializer(serializers.ModelSerializer):
 
 class StepSimpleSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='step-detail', lookup_field='uri_id')
+        view_name='step-detail', lookup_field='api_id')
 
     substeps = RecursiveField(many=True)
     decisionsteps = RecursiveField(many=True)
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'is_super', 'is_decision', 'url',
+        fields = ('api_id', 'title', 'is_super', 'is_decision', 'url',
                   'substeps', 'decisionsteps',)
 
 
 class StepDetailSerializer(serializers.ModelSerializer):
     substeps_url = serializers.HyperlinkedIdentityField(
         view_name='sub-step',
-        lookup_field='uri_id',)
+        lookup_field='api_id',)
     decisionsteps_url = serializers.HyperlinkedIdentityField(
         view_name='decision-step',
-        lookup_field='uri_id',)
+        lookup_field='api_id',)
     modules_url = serializers.HyperlinkedIdentityField(
         view_name='step-module',
-        lookup_field='uri_id',)
+        lookup_field='api_id',)
     substeps = StepSimpleSerializer(
         many=True, read_only=True, context='context')
     decisionsteps = StepSimpleSerializer(
@@ -56,10 +56,10 @@ class StepDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Step
-        fields = ('uri_id', 'title', 'created', 'updated', 'description',
+        fields = ('api_id', 'title', 'created', 'updated', 'description',
                   'substeps_url', 'substeps', 'decisionsteps_url',
                   'decisionsteps', 'modules_url', 'modules',)
-        read_only_fields = ['uri_id', 'created', 'updated', ]
+        read_only_fields = ['api_id', 'created', 'updated', ]
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -67,18 +67,18 @@ class StepDetailSerializer(serializers.ModelSerializer):
 
 
 class SubstepSerializer(serializers.Serializer):
-    uri_id = serializers.CharField(max_length=8)
-    super_uri_id = serializers.CharField(max_length=8)
+    api_id = serializers.UUIDField()
+    super_api_id = serializers.UUIDField()
 
     def create(self, validated_data):
         """
-        Link a step to a How To
+        Link a step to a Sequence
         """
-        super_uri_id = validated_data['super_uri_id']
-        sub_uri_id = validated_data['uri_id']
+        super_api_id = validated_data['super_api_id']
+        sub_api_id = validated_data['api_id']
 
-        super = Step.objects.get(uri_id=super_uri_id)
-        sub = Step.objects.get(uri_id=sub_uri_id)
+        super = Step.objects.get(api_id=super_api_id)
+        sub = Step.objects.get(api_id=sub_api_id)
 
         # Set position
         super_steps = SuperStep.objects.filter(super=super)
@@ -92,12 +92,12 @@ class SubstepSerializer(serializers.Serializer):
         return super_step
 
     def validate(self, data):
-        super_uri_id = data['super_uri_id']
-        step_uri_id = data['uri_id']
+        super_api_id = data['super_api_id']
+        step_api_id = data['api_id']
 
         # Check for duplicate
-        super = Step.objects.get(uri_id=super_uri_id)
-        sub = Step.objects.get(uri_id=step_uri_id)
+        super = Step.objects.get(api_id=super_api_id)
+        sub = Step.objects.get(api_id=step_api_id)
 
         is_substep = SuperStep.objects.filter(super=super,
                                               sub=sub).exists()
@@ -116,18 +116,18 @@ class SubstepSerializer(serializers.Serializer):
 
 
 class DecisionStepSerializer(serializers.Serializer):
-    uri_id = serializers.CharField(max_length=8)
-    super_uri_id = serializers.CharField(max_length=8)
+    api_id = serializers.UUIDField()
+    super_api_id = serializers.UUIDField()
 
     def create(self, validated_data):
         """
         Link a step to a Decision Step
         """
-        super_uri_id = validated_data['super_uri_id']
-        decision_uri_id = validated_data['uri_id']
+        super_api_id = validated_data['super_api_id']
+        decision_api_id = validated_data['api_id']
 
-        super = Step.objects.get(uri_id=super_uri_id)
-        decision = Step.objects.get(uri_id=decision_uri_id)
+        super = Step.objects.get(api_id=super_api_id)
+        decision = Step.objects.get(api_id=decision_api_id)
 
         # Set position
         decision_steps = DecisionStep.objects.filter(super=super)
@@ -141,12 +141,12 @@ class DecisionStepSerializer(serializers.Serializer):
         return decision_step
 
     def validate(self, data):
-        super_uri_id = data['super_uri_id']
-        decision_uri_id = data['uri_id']
+        super_api_id = data['super_api_id']
+        decision_api_id = data['api_id']
 
         # Check for duplicate
-        super = Step.objects.get(uri_id=super_uri_id)
-        decision = Step.objects.get(uri_id=decision_uri_id)
+        super = Step.objects.get(api_id=super_api_id)
+        decision = Step.objects.get(api_id=decision_api_id)
 
         is_decision_step = DecisionStep.objects.filter(
             super=super,
@@ -167,18 +167,18 @@ class DecisionStepSerializer(serializers.Serializer):
 
 
 class StepModuleSerializer(serializers.Serializer):
-    uri_id = serializers.CharField(max_length=8)
-    step_uri_id = serializers.CharField(max_length=8)
+    api_id = serializers.UUIDField()
+    step_api_id = serializers.UUIDField()
     type = serializers.CharField(max_length=128)
 
     def create(self, validated_data):
         """
-        Link a step to a How To
+        Link a step to a Sequence
         """
-        step_uri_id = validated_data['step_uri_id']
-        uri_id = validated_data['uri_id']
+        step_api_id = validated_data['step_api_id']
+        api_id = validated_data['api_id']
 
-        step = Step.objects.get(uri_id=step_uri_id)
+        step = Step.objects.get(api_id=step_api_id)
 
         # Set position
         step_modules = StepModule.objects.filter(step=step)
@@ -188,12 +188,12 @@ class StepModuleSerializer(serializers.Serializer):
 
         # Set linked content
         if validated_data['type'] == 'explanation':
-            explanation = Explanation.objects.get(uri_id=uri_id)
+            explanation = Explanation.objects.get(api_id=api_id)
             module = Module.objects.create(explanation=explanation)
             step_module = StepModule.objects.create(
                 step=step, module=module, pos=new_pos)
         elif validated_data['type'] == 'image':
-            image = Image.objects.get(uri_id=uri_id)
+            image = Image.objects.get(api_id=api_id)
             module = Module.objects.create(image=image)
             step_module = StepModule.objects.create(
                 step=step, module=module, pos=new_pos)
@@ -203,20 +203,20 @@ class StepModuleSerializer(serializers.Serializer):
 
 '''
     def validate(self, data):
-        step_uri_id = data['step_uri_id']
-        uri_id = data['uri_id']
+        step_api_id = data['step_api_id']
+        api_id = data['api_id']
         type = data['type']
 
         # Check for duplicate
-        step = Step.objects.get(uri_id=step_uri_id)
+        step = Step.objects.get(api_id=step_api_id)
 
         if type == 'explanation':
-            explanation = Explanation.objects.get(uri_id=uri_id)
+            explanation = Explanation.objects.get(api_id=api_id)
             step_modules = Module.objects.filter(stepmodule__step_id=step)
             has_duplicate = Explanation.objects.filter(module__in=step_modules,
                                                       explanation=explanation).exists()
         elif type == 'image':
-            image = Image.objects.get(uri_id=uri_id)
+            image = Image.objects.get(api_id=api_id)
             step_modules = Module.objects.filter(stepmodule__step_id=step)
             has_duplicate = image.objects.filter(module__in=step_modules,
                                                       image=image).exists()

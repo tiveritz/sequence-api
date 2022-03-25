@@ -14,7 +14,7 @@ class TestExplanationText():
         Ensure client can create a new Explanation text
         """
         url = reverse('explanation')
-        data = {'type': 'text', 'title': 'How to Create an Explanation'}
+        data = {'type': 'text', 'title': 'Create an Explanation'}
         response = self.api_client.post(url, data, format='json')
 
         msg = 'HTTP status return code is not 201'
@@ -22,13 +22,6 @@ class TestExplanationText():
 
         msg = 'Created title is not correct'
         assert response.data['title'] == data['title'], msg
-
-        msg = 'Created Uri ID is not correct'
-        # Matches any word with lower letters, numbers with a exact length of
-        # 8 characters
-        pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(response.data['uri_id'])) or False
-        assert is_match, msg
 
     @pytest.mark.django_db
     def test_retrieve_text_explanation_by_id(self):
@@ -40,7 +33,7 @@ class TestExplanationText():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
         response_get = self.api_client.get(url, format='json')
 
         msg = 'Retreiving Text Explanation by Uri ID failed'
@@ -60,7 +53,7 @@ class TestExplanationText():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
         status_msg = 'HTTP status return code is not 200'
         data = {
             'title': 'New Title',
@@ -87,14 +80,14 @@ class TestExplanationText():
         response_post = self.api_client.post(url, data, format='json')
 
         url_delete = reverse('explanation-detail',
-                             args=[response_post.data['uri_id']])
+                             args=[response_post.data['api_id']])
         response_delete = self.api_client.delete(url_delete, format='json')
 
         msg = 'HTTP status return code is not 204'
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
         url_get = reverse('explanation-detail',
-                          args=[response_post.data['uri_id']])
+                          args=[response_post.data['api_id']])
         response_get = self.api_client.get(url_get, data, format='json')
         msg = 'Text Explanation was not successfully deleted'
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
@@ -109,10 +102,10 @@ class TestExplanationText():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
 
         data = {
-            'uri_id': 'lolololo',
+            'api_id': 'lolololo',
             'created': 'lol',
         }
 
@@ -134,7 +127,7 @@ class TestExplanationCode():
         Ensure client can create a new Explanation text
         """
         url = reverse('explanation')
-        data = {'type': 'code', 'title': 'How to Create an Explanation'}
+        data = {'type': 'code', 'title': 'Create an Explanation'}
         response = self.api_client.post(url, data, format='json')
 
         msg = 'HTTP status return code is not 201'
@@ -142,13 +135,6 @@ class TestExplanationCode():
 
         msg = 'Created title is not correct'
         assert response.data['title'] == data['title'], msg
-
-        msg = 'Created Uri ID is not correct'
-        # Matches any word with lower letters, numbers with a exact length of
-        # 8 characters
-        pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(response.data['uri_id'])) or False
-        assert is_match, msg
 
     @pytest.mark.django_db
     def test_retrieve_code_explanation_by_id(self):
@@ -160,7 +146,7 @@ class TestExplanationCode():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
         response_get = self.api_client.get(url, format='json')
 
         msg = 'Retreiving Code Explanation by Uri ID failed'
@@ -180,7 +166,7 @@ class TestExplanationCode():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
         status_msg = 'HTTP status return code is not 200'
         data = {
             'title': 'New Title',
@@ -207,14 +193,14 @@ class TestExplanationCode():
         response_post = self.api_client.post(url, data, format='json')
 
         url_delete = reverse('explanation-detail',
-                             args=[response_post.data['uri_id']])
+                             args=[response_post.data['api_id']])
         response_delete = self.api_client.delete(url_delete, format='json')
 
         msg = 'HTTP status return code is not 204'
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
         url_get = reverse('explanation-detail',
-                          args=[response_post.data['uri_id']])
+                          args=[response_post.data['api_id']])
         response_get = self.api_client.get(url_get, data, format='json')
         msg = 'Code Explanation was not successfully deleted'
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
@@ -229,10 +215,10 @@ class TestExplanationCode():
         response_post = self.api_client.post(url, data, format='json')
 
         url = reverse('explanation-detail',
-                      args=[response_post.data['uri_id']])
+                      args=[response_post.data['api_id']])
 
         data = {
-            'uri_id': 'lolololo',
+            'api_id': 'lolololo',
             'created': 'lol',
         }
 

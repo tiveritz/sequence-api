@@ -20,9 +20,9 @@ class TestModules():
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {
-            'uri_id': response_explanation.data['uri_id'],
+            'api_id': response_explanation.data['api_id'],
             'type': 'explanation',
         }
         response_module = self.api_client.post(url, data, format='json')
@@ -31,13 +31,13 @@ class TestModules():
         assert response_module.status_code == status.HTTP_201_CREATED, msg
 
         # Check if Explanation was correctly added
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         response_get = self.api_client.get(url, format='json')
 
-        msg = 'Could not retrieve step module by uri_id'
-        response_uri_id = response_get.data[0]['uri_id']
-        data_uri_id = response_explanation.data['uri_id']
-        assert response_uri_id == data_uri_id, msg
+        msg = 'Could not retrieve step module by api_id'
+        response_api_id = response_get.data[0]['api_id']
+        data_api_id = response_explanation.data['api_id']
+        assert response_api_id == data_api_id, msg
 
     @pytest.mark.django_db
     def test_add_code_explanation_module_to_step(self, step):
@@ -50,9 +50,9 @@ class TestModules():
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {
-            'uri_id': response_explanation.data['uri_id'],
+            'api_id': response_explanation.data['api_id'],
             'type': 'explanation',
         }
         response_module = self.api_client.post(url, data, format='json')
@@ -61,13 +61,13 @@ class TestModules():
         assert response_module.status_code == status.HTTP_201_CREATED, msg
 
         # Check if Explanation was correctly added
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         response_get = self.api_client.get(url, format='json')
 
-        msg = 'Could not retrieve step module by uri_id'
-        response_uri_id = response_get.data[0]['uri_id']
-        data_uri_id = response_explanation.data['uri_id']
-        assert response_uri_id == data_uri_id, msg
+        msg = 'Could not retrieve step module by api_id'
+        response_api_id = response_get.data[0]['api_id']
+        data_api_id = response_explanation.data['api_id']
+        assert response_api_id == data_api_id, msg
 
     @pytest.mark.django_db
     def test_rearrange_modules(self, step):
@@ -82,28 +82,28 @@ class TestModules():
         response_code_module = self.api_client.post(url, data, format='json')
 
         # Add Modules to Step
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {
-            'uri_id': response_text_module.data['uri_id'],
+            'api_id': response_text_module.data['api_id'],
             'type': 'explanation',
         }
         self.api_client.post(url, data, format='json')
         data = {
-            'uri_id': response_code_module.data['uri_id'],
+            'api_id': response_code_module.data['api_id'],
             'type': 'explanation',
         }
         self.api_client.post(url, data, format='json')
 
         # Check initial order
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Initial module position is not ok'
-        assert modules[0]['uri_id'] == response_text_module.data['uri_id'], msg
-        assert modules[1]['uri_id'] == response_code_module.data['uri_id'], msg
+        assert modules[0]['api_id'] == response_text_module.data['api_id'], msg
+        assert modules[1]['api_id'] == response_code_module.data['api_id'], msg
 
         # Reorder
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {'method': 'order', 'old_index': 0, 'new_index': 1}
         response = self.api_client.patch(url, data, format='json')
 
@@ -111,12 +111,12 @@ class TestModules():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check new order
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Changed module position is not ok'
-        assert modules[0]['uri_id'] == response_code_module.data['uri_id'], msg
-        assert modules[1]['uri_id'] == response_text_module.data['uri_id'], msg
+        assert modules[0]['api_id'] == response_code_module.data['api_id'], msg
+        assert modules[1]['api_id'] == response_text_module.data['api_id'], msg
 
     @pytest.mark.django_db
     def test_delete_module(self, step):
@@ -129,33 +129,33 @@ class TestModules():
         response_explanation = self.api_client.post(url, data, format='json')
 
         # Add Explanation to Step
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {
-            'uri_id': response_explanation.data['uri_id'],
+            'api_id': response_explanation.data['api_id'],
             'type': 'explanation',
         }
         self.api_client.post(url, data, format='json')
 
         # Check if Explanation was correctly linked
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         response_get = self.api_client.get(url, format='json')
 
-        msg = 'Could not retrieve step module by uri_id'
-        response_uri_id = response_get.data[0]['uri_id']
-        data_uri_id = response_explanation.data['uri_id']
-        assert response_uri_id == data_uri_id, msg
+        msg = 'Could not retrieve step module by api_id'
+        response_api_id = response_get.data[0]['api_id']
+        data_api_id = response_explanation.data['api_id']
+        assert response_api_id == data_api_id, msg
 
         # Delete
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {'method': 'delete',
-                'uri_id': response_explanation.data['uri_id']}
+                'api_id': response_explanation.data['api_id']}
         response = self.api_client.patch(url, data, format='json')
 
         msg = 'Deleting Substep did not return 200'
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check if successfully deleted
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         modules = self.api_client.get(url, format='json').data
 
         msg = 'Deleting Substep was not successfull'
@@ -184,25 +184,17 @@ class TestImage():
         msg = 'Created title is not correct'
         assert response_post.data['title'] == 'test_image.png', msg
 
-        msg = 'Created Uri ID is not correct'
-        # Matches any word with lower letters, numbers with a exact length of
-        # 8 characters
-        pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(
-            response_post.data['uri_id'])) or False
-        assert is_match, msg
-
         msg = 'Created image name is not correct'
-        image_name = '/' + response_post.data['uri_id'] + '.png'
+        image_name = '/' + response_post.data['api_id'] + '.png'
         is_correct = image_name in response_post.data['image']
         assert is_correct, msg
 
-        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        url = reverse('image-detail', args=[response_post.data['api_id']])
         msg = 'Image deletion does not work'
         response_delete = self.api_client.delete(url)
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
-        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        url = reverse('image-detail', args=[response_post.data['api_id']])
         response_get = self.api_client.get(url)
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
 
@@ -225,25 +217,17 @@ class TestImage():
         msg = 'Created title is not correct'
         assert response_post.data['title'] == 'test_image.jpg', msg
 
-        msg = 'Created Uri ID is not correct'
-        # Matches any word with lower letters, numbers with a exact length of
-        # 8 characters
-        pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(
-            response_post.data['uri_id'])) or False
-        assert is_match, msg
-
         msg = 'Created image name is not correct'
-        image_name = '/' + response_post.data['uri_id'] + '.jpg'
+        image_name = '/' + response_post.data['api_id'] + '.jpg'
         is_correct = image_name in response_post.data['image']
         assert is_correct, msg
 
-        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        url = reverse('image-detail', args=[response_post.data['api_id']])
         msg = 'Image deletion does not work'
         response_delete = self.api_client.delete(url)
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
-        url = reverse('image-detail', args=[response_post.data['uri_id']])
+        url = reverse('image-detail', args=[response_post.data['api_id']])
         response_get = self.api_client.get(url)
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
 
@@ -262,9 +246,9 @@ class TestImage():
         response_image = self.api_client.post(url, data)
 
         # Add Image to Step
-        url = reverse('step-module', args=[step.uri_id])
+        url = reverse('step-module', args=[step.api_id])
         data = {
-            'uri_id': response_image.data['uri_id'],
+            'api_id': response_image.data['api_id'],
             'type': 'image',
         }
         response_module = self.api_client.post(url, data, format='json')
@@ -273,5 +257,5 @@ class TestImage():
         assert response_module.status_code == status.HTTP_201_CREATED, msg
 
         # Delete Image
-        url = reverse('image-detail', args=[response_image.data['uri_id']])
+        url = reverse('image-detail', args=[response_image.data['api_id']])
         self.api_client.delete(url)

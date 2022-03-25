@@ -14,7 +14,7 @@ class TestStep():
         Ensure client can create a new Step
         """
         url = reverse('step-list')
-        data = {'title': 'How to Create a Step'}
+        data = {'title': 'Create a Step'}
         response = self.api_client.post(url, data, format='json')
 
         msg = 'HTTP status return code is not 201'
@@ -23,25 +23,18 @@ class TestStep():
         msg = 'Created data is not correct'
         assert response.data['title'] == data['title'], msg
 
-        msg = 'Uri ID was not created correctly'
-        # Matches any word with lower letters, numbers with a exact length of
-        # 8 characters
-        pattern = re.compile(r'^[a-z0-9]{8}$')
-        is_match = re.match(pattern, str(response.data['uri_id'])) or False
-        assert is_match, msg
-
     @pytest.mark.django_db
     def test_retrieve_step_by_id(self, step):
         """
         Ensure client can retreive a Step by Uri ID
         """
-        url = reverse('step-detail', args=[step.uri_id])
+        url = reverse('step-detail', args=[step.api_id])
         response_get = self.api_client.get(url, format='json')
 
-        msg = 'Retreiving How To by Uri ID failed'
+        msg = 'Retreiving Sequence by Uri ID failed'
         assert response_get.status_code == status.HTTP_200_OK, msg
 
-        msg = 'Retreiving How To by Uri ID did not return the correct how to'
+        msg = 'Retreiving Sequence by Uri ID did not return the correct Sequence'
         assert response_get.data['title'] == step.title, msg
 
     @pytest.mark.django_db
@@ -49,7 +42,7 @@ class TestStep():
         """
         Ensure client can update Step
         """
-        url = reverse('step-detail', args=[step.uri_id])
+        url = reverse('step-detail', args=[step.api_id])
         status_msg = 'HTTP status return code is not 200'
         data = {
             'title': 'New Title',
@@ -71,13 +64,13 @@ class TestStep():
         """
         Ensure client can delete Step
         """
-        url_delete = reverse('step-detail', args=[step.uri_id])
+        url_delete = reverse('step-detail', args=[step.api_id])
         response_delete = self.api_client.delete(url_delete, format='json')
 
         msg = 'HTTP status return code is not 204'
         assert response_delete.status_code == status.HTTP_204_NO_CONTENT, msg
 
-        url_get = reverse('step-detail', args=[step.uri_id])
+        url_get = reverse('step-detail', args=[step.api_id])
         response_get = self.api_client.get(url_get, format='json')
         msg = 'Step was not successfully deleted'
         assert response_get.status_code == status.HTTP_404_NOT_FOUND, msg
@@ -91,10 +84,10 @@ class TestStep():
         data = {'title': 'Forbidden update'}
         response_post = self.api_client.post(url, data, format='json')
 
-        url = reverse('step-detail', args=[response_post.data['uri_id']])
+        url = reverse('step-detail', args=[response_post.data['api_id']])
 
         data = {
-            'uri_id': 'lolololo',
+            'api_id': 'lolololo',
             'created': 'lol',
         }
 
@@ -116,26 +109,25 @@ class TestSuperStep():
         Ensure client can link a Step to a Superstep, then delete it
         """
         # Link Step to Superstep
-        url = reverse('sub-step', args=[superstep.uri_id])
-        data = {'uri_id': step.uri_id}
+        url = reverse('sub-step', args=[superstep.api_id])
+        data = {'api_id': step.api_id}
         self.api_client.post(url, data, format='json')
 
         # Check if Step was correctly linked
-        url = reverse('step-detail', args=[superstep.uri_id])
+        url = reverse('step-detail', args=[superstep.api_id])
         response = self.api_client.get(url, format='json')
 
         msg = 'Step was not linked to Superstep correctly'
-        response_uri_id = response.data['substeps'][0]['uri_id']
-        data_uri_id = step.uri_id
-        assert response_uri_id == data_uri_id, msg
+        response_api_id = response.data['substeps'][0]['api_id']
+        assert response_api_id == str(step.api_id), msg
 
         # Unlink step
         url = reverse('super-detail',
-                      args=[superstep.uri_id, step.uri_id])
+                      args=[superstep.api_id, step.api_id])
         response = self.api_client.delete(url, format='json')
 
         # Check if Step was correctly unlinked
-        url = reverse('step-detail', args=[superstep.uri_id])
+        url = reverse('step-detail', args=[superstep.api_id])
         response = self.api_client.get(url, format='json')
 
         msg = 'Step was not unlinked from Superstep correctly'
@@ -154,23 +146,23 @@ class TestSuperStep():
         substep2 = self.api_client.post(url, data, format='json')
 
         # Link Step to Superstep
-        url = reverse('sub-step', args=[superstep.uri_id])
-        data = {'uri_id': substep1.data['uri_id']}
+        url = reverse('sub-step', args=[superstep.api_id])
+        data = {'api_id': substep1.data['api_id']}
         self.api_client.post(url, data, format='json')
-        data = {'uri_id': substep2.data['uri_id']}
+        data = {'api_id': substep2.data['api_id']}
         self.api_client.post(url, data, format='json')
 
         # Check initial order
-        url = reverse('step-detail', args=[superstep.uri_id])
+        url = reverse('step-detail', args=[superstep.api_id])
         response = self.api_client.get(url, format='json')
         steps = response.data['substeps']
 
         msg = 'Initial step position is not ok'
-        assert steps[0]['uri_id'] == substep1.data['uri_id'], msg
-        assert steps[1]['uri_id'] == substep2.data['uri_id'], msg
+        assert steps[0]['api_id'] == substep1.data['api_id'], msg
+        assert steps[1]['api_id'] == substep2.data['api_id'], msg
 
         # Reorder
-        url = reverse('sub-step', args=[superstep.uri_id])
+        url = reverse('sub-step', args=[superstep.api_id])
         data = {'method': 'order', 'old_index': 0, 'new_index': 1}
         response = self.api_client.patch(url, data, format='json')
 
@@ -178,13 +170,13 @@ class TestSuperStep():
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check new order
-        url = reverse('step-detail', args=[superstep.uri_id])
+        url = reverse('step-detail', args=[superstep.api_id])
         response = self.api_client.get(url, format='json')
         steps = response.data['substeps']
 
         msg = 'Changed step position is not ok'
-        assert steps[0]['uri_id'] == substep2.data['uri_id'], msg
-        assert steps[1]['uri_id'] == substep1.data['uri_id'], msg
+        assert steps[0]['api_id'] == substep2.data['api_id'], msg
+        assert steps[1]['api_id'] == substep1.data['api_id'], msg
 
     @pytest.mark.django_db
     def test_delete_substep(self, superstep, step):
@@ -192,28 +184,28 @@ class TestSuperStep():
         Ensure client can delete substeps
         """
         # Link Step to Superstep
-        url = reverse('sub-step', args=[superstep.uri_id])
-        data = {'uri_id': step.uri_id}
+        url = reverse('sub-step', args=[superstep.api_id])
+        data = {'api_id': step.api_id}
         self.api_client.post(url, data, format='json')
 
         # Check if Step was correctly linked
-        url = reverse('step-detail', args=[superstep.uri_id])
+        url = reverse('step-detail', args=[superstep.api_id])
         response = self.api_client.get(url, format='json').data
 
         msg = 'Substep was not linked to Superstep correctly'
-        assert response['substeps'][0]['uri_id'] == step.uri_id, msg
+        assert response['substeps'][0]['api_id'] == str(step.api_id), msg
 
         # Delete
-        url = reverse('sub-step', args=[superstep.uri_id])
+        url = reverse('sub-step', args=[superstep.api_id])
         data = {'method': 'delete',
-                'uri_id': response['substeps'][0]['uri_id']}
+                'api_id': response['substeps'][0]['api_id']}
         response = self.api_client.patch(url, data, format='json')
 
         msg = 'Deleting Substep did not return 200'
         assert response.status_code == status.HTTP_200_OK, msg
 
         # Check if successfully deleted
-        url = reverse('sub-step', args=[superstep.uri_id])
+        url = reverse('sub-step', args=[superstep.api_id])
         steps = self.api_client.get(url, format='json').data
 
         msg = 'Deleting Substep was not successfull'

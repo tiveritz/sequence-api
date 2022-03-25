@@ -1,18 +1,18 @@
 from django.contrib import admin
 
 
-from .models import (HowTo, HowToStep, Step, SuperStep, Explanation,
-                     StepModule, DecisionStep, Module, Image, HowToGuide,
-                     HowToGuideStep,)
+from .models import (Sequence, SequenceStep, Step, SuperStep, Explanation,
+                     StepModule, DecisionStep, Module, Image, SequenceGuide,
+                     SequenceGuideStep,)
 
-admin.site.register(HowTo)
+admin.site.register(Sequence)
 admin.site.register(Step)
-admin.site.register(HowToStep)
+admin.site.register(SequenceStep)
 admin.site.register(SuperStep)
 admin.site.register(DecisionStep)
 admin.site.register(Explanation)
 admin.site.register(StepModule)
 admin.site.register(Module)
 admin.site.register(Image)
-admin.site.register(HowToGuide)
-admin.site.register(HowToGuideStep)
+admin.site.register(SequenceGuide)
+admin.site.register(SequenceGuideStep)

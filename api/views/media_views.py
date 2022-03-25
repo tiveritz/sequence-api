@@ -1,9 +1,11 @@
+import boto3
+import uuid
+
+
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..functions.uri_id import generate_uri_id
 from ..functions.custom_renderers import JPEGRenderer, PNGRenderer
-import boto3
 from django.conf import settings
 
 from ..models import Image
@@ -26,12 +28,12 @@ class ImageView(APIView):
     def post(self, request, *args, **kwargs):
         if request.data['image']:
             orig_name = request.data['image'].name
-            uri_id = generate_uri_id()
-            request.data['image'].name = uri_id + \
+            api_id = str(uuid.uuid4())
+            request.data['image'].name = api_id + \
                 '.' + orig_name.split('.')[-1]
 
             image = Image.objects.create(
-                uri_id=uri_id,
+                api_id=api_id,
                 image=request.data['image'],
                 title=orig_name,
                 caption=request.data.get('caption', None),
@@ -51,17 +53,17 @@ class ImageDetailView(APIView):
     Detail view to Images
     """
 
-    def get(self, request, uri_id):
+    def get(self, request, api_id):
         try:
-            images = Image.objects.get(uri_id=uri_id)
+            images = Image.objects.get(api_id=api_id)
         except Image.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ImageDetailSerializer(images,
                                            context={'request': request})
         return Response(serializer.data)
 
-    def delete(self, request, uri_id):
-        image = Image.objects.get(uri_id=uri_id)
+    def delete(self, request, api_id):
+        image = Image.objects.get(api_id=api_id)
 
         session = boto3.session.Session()
         client = session.client(
@@ -89,7 +91,7 @@ class ImageRenderView(APIView):
     renderer_classes = [JPEGRenderer, PNGRenderer]
     authentication_classes = []
 
-    def get(self, request, uri_id, media_type):
-        image = Image.objects.get(uri_id=uri_id)
+    def get(self, request, api_id, media_type):
+        image = Image.objects.get(api_id=api_id)
 
         return Response(image.image, status=status.HTTP_200_OK)

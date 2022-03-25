@@ -3,17 +3,17 @@ from rest_framework.response import Response
 from rest_framework import status
 import re
 
-from ..models import (HowToGuide,
-                      HowToGuideStep,
+from ..models import (SequenceGuide,
+                      SequenceGuideStep,
                       Image)
 
-from ..serializers.guide_serializers import (HowToGuideSerializer,
+from ..serializers.guide_serializers import (SequenceGuideSerializer,
                                              StepGuideSerializer,)
 
 
-class HowToGuideListView(APIView):
+class SequenceGuideListView(APIView):
     """
-    View to How To Guide List
+    View to Sequence Guide List
     """
 
     def get(self, request, space):
@@ -23,8 +23,8 @@ class HowToGuideListView(APIView):
             'public': 'PBL',
             'private': 'PRV',
         }
-        guide_howto = HowToGuide.objects.filter(space=spaces_dict[space])
-        serializer = HowToGuideSerializer(guide_howto,
+        guide_sequence = SequenceGuide.objects.filter(space=spaces_dict[space])
+        serializer = SequenceGuideSerializer(guide_sequence,
                                           many=True,
                                           context={'request': request})
         return Response(serializer.data)
@@ -36,28 +36,28 @@ class StepGuideListView(APIView):
     """
 
     def get(self, request):
-        guide_step = HowToGuideStep.objects.all()
+        guide_step = SequenceGuideStep.objects.all()
         serializer = StepGuideSerializer(guide_step,
                                          many=True,
                                          context={'request': request})
         return Response(serializer.data)
 
 
-class HowToGuideView(APIView):
+class SequenceGuideView(APIView):
     """
-    View to How To Guide
+    View to Sequence Guide
     """
 
-    def get(self, request, uri_id, space):
+    def get(self, request, api_id, space):
         spaces_dict = {
             'test': 'TST',
             'preview': 'PRV',
             'public': 'PBL',
             'private': 'PRV',
         }
-        guide_howto = HowToGuide.objects.get(
-            howto_uri_id=uri_id, space=spaces_dict[space])
-        serializer = HowToGuideSerializer(guide_howto,
+        guide_sequence = SequenceGuide.objects.get(
+            sequence_api_id=api_id, space=spaces_dict[space])
+        serializer = SequenceGuideSerializer(guide_sequence,
                                           context={'request': request})
         return Response(serializer.data)
 
@@ -67,11 +67,11 @@ class StepGuideView(APIView):
     View to Step Guide
     """
 
-    def get(self, request, howto_uri_id, step_uri_id, ref_id):
+    def get(self, request, sequence_api_id, step_api_id, ref_api_id):
         try:
-            guide_step = HowToGuideStep.objects.get(
-                uri_id=step_uri_id, ref_id=ref_id)
-        except HowToGuideStep.DoesNotExist:
+            guide_step = SequenceGuideStep.objects.get(
+                api_id=step_api_id, ref_api_id=ref_api_id)
+        except SequenceGuideStep.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         serializer = StepGuideSerializer(guide_step,
@@ -89,7 +89,7 @@ class StepGuideView(APIView):
 
         if image_ids:
             for image_id in image_ids:
-                image = Image.objects.get(uri_id=image_id)
+                image = Image.objects.get(api_id=image_id)
                 replace = '[[img|' + image_id + ']]'
                 content = content.replace(replace, image.image.url)
         return content

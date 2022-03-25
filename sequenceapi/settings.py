@@ -1,27 +1,16 @@
 import os
+
+from dotenv import load_dotenv
 from pathlib import Path
-from howtosapi.env import cAppSettings
+from sequenceapi.environment import parse_environment_boolean
 
 
-# Create app settings from environment variables
-app_settings = cAppSettings()
+load_dotenv()
 
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS').split(',')
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = app_settings.SECRET_KEY
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = app_settings.DEBUG
-
-ALLOWED_HOSTS = app_settings.ALLOWED_HOSTS
-
+DEBUG = parse_environment_boolean(os.getenv('DEBUG'))
+SECRET_KEY = os.getenv('SECRET_KEY')
 VERSION = os.getenv('VERSION')
 
 # Application definition
@@ -70,7 +59,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'howtosapi.urls'
+ROOT_URLCONF = 'sequenceapi.urls'
 
 TEMPLATES = [
     {
@@ -88,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'howtosapi.wsgi.application'
+WSGI_APPLICATION = 'sequenceapi.wsgi.application'
 
 
 # Database
@@ -105,6 +94,19 @@ DATABASES = {
     }
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -137,9 +139,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-
 # Static files
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 STATIC_ROOT = '/data/'
@@ -157,10 +156,10 @@ AWS_S3_ACCESS_KEY_ID = os.environ.get('AWS_S3_ACCESS_KEY_ID')
 AWS_S3_SECRET_ACCESS_KEY = os.getenv('AWS_S3_SECRET_ACCESS_KEY')
 AWS_S3_ENDPOINT_URL = 'https://fra1.digitaloceanspaces.com'
 
-STATICFILES_LOCATION = 'howtos/api/static'
-STATICFILES_STORAGE = 'howtosapi.storages.StaticRootS3Boto3Storage'
+STATICFILES_LOCATION = 'sequence/api/static'
+STATICFILES_STORAGE = 'sequenceapi.storages.StaticRootS3Boto3Storage'
 STATIC_URL = '{}/{}/'.format(AWS_S3_ENDPOINT_URL, STATICFILES_LOCATION)
 
-MEDIAFILES_LOCATION = 'howtos/api/media'
-DEFAULT_FILE_STORAGE = 'howtosapi.storages.MediaRootS3Boto3Storage'
+MEDIAFILES_LOCATION = 'sequence/api/media'
+DEFAULT_FILE_STORAGE = 'sequenceapi.storages.MediaRootS3Boto3Storage'
 MEDIA_URL = '{}/{}/'.format(AWS_S3_ENDPOINT_URL, MEDIAFILES_LOCATION)

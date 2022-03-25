@@ -8,18 +8,18 @@ class TestDataIntegrity():
     api_client = APIClient()
 
     @pytest.mark.django_db
-    def test_forbid_howto_step_duplicate(self, howto, step):
+    def test_forbid_sequence_step_duplicate(self, sequence, step):
         """
-        Ensure client can not add a Substep to a How To more than once
+        Ensure client can not add a Substep to a Sequence more than once
         """
-        url = reverse('how-to-step', args=[howto.uri_id])
-        data = {'uri_id': step.uri_id}
+        url = reverse('sequence-step', args=[sequence.api_id])
+        data = {'api_id': step.api_id}
 
         first_response = self.api_client.post(url, data, format='json')
         assert first_response.status_code == status.HTTP_201_CREATED
 
         second_response = self.api_client.post(url, data, format='json')
-        msg = ('Adding duplicate Substeps in a How To did not return correct '
+        msg = ('Adding duplicate Substeps in a Sequence did not return correct '
                'status code')
         assert second_response.status_code == status.HTTP_403_FORBIDDEN, msg
 
@@ -28,8 +28,8 @@ class TestDataIntegrity():
         """
         Ensure client can not add a Substep to a Superstep more than once
         """
-        url = reverse('sub-step', args=[superstep.uri_id])
-        data = {'uri_id': step.uri_id}
+        url = reverse('sub-step', args=[superstep.api_id])
+        data = {'api_id': step.api_id}
 
         first_response = self.api_client.post(url, data, format='json')
         assert first_response.status_code == status.HTTP_201_CREATED
@@ -77,21 +77,21 @@ class TestDataIntegrity():
         ]
 
         for link in links:
-            url = reverse('sub-step', args=[link[0].data['uri_id']])
-            data = {'uri_id': link[1].data['uri_id']}
+            url = reverse('sub-step', args=[link[0].data['api_id']])
+            data = {'api_id': link[1].data['api_id']}
             self.api_client.post(url, data, format='json')
 
         # Try to link c to e -> conflict c (is substep of e)
-        url = reverse('sub-step', args=[steps['c'].data['uri_id']])
-        data = {'uri_id': steps['e'].data['uri_id']}
+        url = reverse('sub-step', args=[steps['c'].data['api_id']])
+        data = {'api_id': steps['e'].data['api_id']}
         response = self.api_client.post(url, data, format='json')
 
         msg = 'Adding forbidden circular reference was not blocked'
         assert response.status_code == status.HTTP_403_FORBIDDEN, msg
 
         # Try to link e to c -> conflict e (has c and b as substep)
-        url = reverse('sub-step', args=[steps['c'].data['uri_id']])
-        data = {'uri_id': steps['e'].data['uri_id']}
+        url = reverse('sub-step', args=[steps['c'].data['api_id']])
+        data = {'api_id': steps['e'].data['api_id']}
         response = self.api_client.post(url, data, format='json')
 
         msg = 'Adding forbidden circular reference was not blocked'

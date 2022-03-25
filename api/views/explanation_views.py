@@ -32,17 +32,17 @@ class ExplanationDetailView(APIView):
     """
     View to Explanation Detail
     """
-    def get(self, request, uri_id):
+    def get(self, request, api_id):
         try:
-            explanation = Explanation.objects.get(uri_id=uri_id)
+            explanation = Explanation.objects.get(api_id=api_id)
         except Explanation.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         serializer = ExplanationDetailSerializer(explanation,
                                                  context={'request': request})
         return Response(serializer.data)
 
-    def patch(self, request, uri_id):
-        explanation = Explanation.objects.get(uri_id=uri_id)
+    def patch(self, request, api_id):
+        explanation = Explanation.objects.get(api_id=api_id)
         serializer = ExplanationDetailSerializer(explanation,
                                                  data=request.data,
                                                  partial=True,
@@ -54,6 +54,6 @@ class ExplanationDetailView(APIView):
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, uri_id):
-        Explanation.objects.get(uri_id=uri_id).delete()
+    def delete(self, request, api_id):
+        Explanation.objects.get(api_id=api_id).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

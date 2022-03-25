@@ -1,10 +1,10 @@
 import pytest
-from api.models import HowTo, Step
+from api.models import Sequence, Step
 
 
 @pytest.fixture()
-def howto():
-    return HowTo.objects.create(title='How To')
+def sequence():
+    return Sequence.objects.create(title='Sequence')
 
 
 @pytest.fixture()
