@@ -29,7 +29,7 @@ class SequenceGuideListView(APIView):
                                           context={'request': request})
         return Response(serializer.data)
 
-
+'''
 class StepGuideListView(APIView):
     """
     View to Step Guide List
@@ -41,6 +41,7 @@ class StepGuideListView(APIView):
                                          many=True,
                                          context={'request': request})
         return Response(serializer.data)
+'''
 
 
 class SequenceGuideView(APIView):
@@ -56,7 +57,7 @@ class SequenceGuideView(APIView):
             'private': 'PRV',
         }
         guide_sequence = SequenceGuide.objects.get(
-            sequence_api_id=api_id, space=spaces_dict[space])
+            api_id=api_id, space=spaces_dict[space])
         serializer = SequenceGuideSerializer(guide_sequence,
                                           context={'request': request})
         return Response(serializer.data)
@@ -67,10 +68,10 @@ class StepGuideView(APIView):
     View to Step Guide
     """
 
-    def get(self, request, sequence_api_id, step_api_id, ref_api_id):
+    def get(self, request, step_api_id):
         try:
             guide_step = SequenceGuideStep.objects.get(
-                api_id=step_api_id, ref_api_id=ref_api_id)
+                api_id=step_api_id)
         except SequenceGuideStep.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 

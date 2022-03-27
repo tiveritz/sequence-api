@@ -1,4 +1,5 @@
 import copy
+from re import A
 import uuid
 
 from django.db.models import F
@@ -18,6 +19,150 @@ from ..serializers.sequence_serializers import (SequenceSerializer,
                                              StepSimpleSerializer,)
 
 
+class SequenceNode():
+    def __init__(self, step, guide_sequence, main_sequence=None, parent=None):
+        self.step = step
+        self.parent = parent
+        self.guide_sequence = guide_sequence
+        self.main_sequence = main_sequence
+        self.substep_nodes = []
+        self.decision_nodes = []
+        
+        for step in step.substeps:
+            sequence_node = SequenceNode(step, guide_sequence, parent=self)
+            self.substep_nodes.append(sequence_node)
+        
+        for step in step.decisionsteps:
+            sequence_node = SequenceNode(step, guide_sequence, parent=self)
+            self.decision_nodes.append(sequence_node)
+
+    def _get_first(self):
+        return self.guide_sequence.first
+
+    def _get_previous(self):
+        if self.main_sequence:
+            index = self.main_sequence.index(self.step)
+            if index != 0:
+                return self.main_sequence[index - 1].api_id
+
+        if self.parent and self.parent.substep_nodes:
+            index = self.parent.substep_nodes.index(self)
+            if index != 0:
+                return self.parent.substep_nodes[index - 1].step.api_id
+            return self.parent.step.api_id
+        
+        if self.parent and self.parent.decision_nodes:
+            return self.parent.step.api_id
+
+        return None
+        
+        
+            #if self.parent and self.parent.substep_nodes:
+            #    index = self.parent.substep_nodes.index(self.step)
+            #    if index != 0:
+            #        return self.parent.substep_nodes[index - 1].step.api_id
+
+            #if self.parent and self.parent.decision_nodes:
+            #    return self.parent.step.api_id
+
+    def _get_next(self):
+        if self.decision_nodes:
+            return
+        if self.substep_nodes:
+            return self.substep_nodes[0].step.api_id
+        elif self.parent:
+            return self._recursive_next_step_parent(self)
+
+        else:
+            try:
+                index = self.main_sequence.index(self.step)
+                if index < len(self.main_sequence) - 1:
+                    return self.main_sequence[index + 1].api_id
+            except ValueError:
+                return
+    
+    def _recursive_next_step_parent(self, node):
+        if node.parent is None:
+            try:
+                index = node.main_sequence.index(node.step)
+                if index < len(node.main_sequence) - 1:
+                    return node.main_sequence[index + 1].api_id
+            except ValueError:
+                return None
+        
+        if node.parent.parent is not None and node.parent.parent.decision_nodes:
+            if node.parent.substep_nodes:
+                index = node.parent.substep_nodes.index(node)
+                if index < len(node.parent.substep_nodes) - 1:
+                    return node.parent.substep_nodes[index + 1].step.api_id
+            
+            if node.parent.parent.parent is not None:
+                return self._recursive_next_step_parent(node.parent.parent.parent)
+            else:
+                index = node.parent.parent.main_sequence.index(node.parent.parent.step)
+                if index < len(node.parent.parent.main_sequence) - 1:
+                    return node.parent.parent.main_sequence[index + 1].api_id
+                
+        try:
+            index = node.parent.substep_nodes.index(node)
+            if index < len(node.parent.substep_nodes) - 1:
+                return node.parent.substep_nodes[index + 1].step.api_id
+            
+        except ValueError:
+            index = node.parent.decision_nodes.index(node)
+            if index < len(node.parent.decision_nodes) - 1:
+                return node.parent.decision_nodes[index + 1].step.api_id
+        
+        return self._recursive_next_step_parent(node.parent)
+    
+    
+    def render(self):
+        decision_steps = [str(node.step.api_id) for node in self.decision_nodes]
+        SequenceGuideStep.objects.create(
+            api_id=self.step.api_id,
+            sequence=self.guide_sequence,
+            sequence_title=self.guide_sequence.title,
+            title=self.step.title,
+            decision_steps=','.join(decision_steps),
+            first=self._get_first(),
+            previous=self._get_previous(),
+            next=self._get_next(),
+            content=self._get_content(),
+        )
+
+        for node in self.substep_nodes:
+            node.render()
+        
+        for node in self.decision_nodes:
+            node.render()
+        
+
+    def _get_content(self):
+        if self.step.modules:
+            rendered = ''
+            for module in self.step.modules:
+                if module.type == 'text':
+                    before = '<pre class="module-text">\n'
+                    after = '</pre>\n'
+                    content = before + module.content + after
+                    rendered += content
+
+                elif module.type == 'code':
+                    before = '<pre class="module-code">\n'
+                    after = '</pre>\n'
+                    content = before + module.content + after
+                    rendered += content
+
+                elif module.type == 'image':
+                    img = '<img class="module-image" src="[[img|{}]]" alt="{}">\n'.format(
+                        module.api_id, module.caption
+                    )
+                    rendered += img
+            return rendered
+        return ''
+    
+
+
 class SequenceListView(ListAPIView):
     """
     View to Sequences
@@ -35,7 +180,6 @@ class SequenceListView(ListAPIView):
                             status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
-
 
 class SequenceDetailView(APIView):
     """
@@ -205,145 +349,6 @@ class SequencePublishView(APIView):
             return rendered
         return ''
 
-    def _recursive_stepdict(self, step, level, number):
-        stepdict = {}
-        number[level] += 1
-
-        stepdict[step.api_id] = {
-            'ref_api_id': uuid.uuid4(),
-            'number': '.'.join([str(pos) for pos in number]),
-            'title': step.title,
-            'current': False,
-            'level': level,
-        }
-
-        if step.substeps:
-            level += 1
-            new_number = number[:]
-            new_number.append(0)
-            for step in step.substeps:
-                substepdict = self._recursive_stepdict(step, level, new_number)
-                stepdict = {**stepdict, **substepdict}
-        return stepdict
-
-    def _recursive_guide_step(self, guide_sequence, step):
-
-        rendered_content = self._render_content(step.modules)
-
-        SequenceGuideStep.objects.create(
-            api_id='a',
-            ref_api_id='b',
-            sequence=guide_sequence,
-            sequence_title=guide_sequence.title,
-            title=step.title,
-            steps='c',
-            decisions='c',
-            first='e',
-            first_ref='f',
-            previous='g',
-            previous_ref='h',
-            next='i',
-            next_ref='j',
-            content=rendered_content,
-        )
-
-        if step.substeps:
-            for step in step.substeps:
-                self._recursive_guide_step(
-                    guide_sequence, step)
-
-    def asdf_post(self, request, api_id):
-        spaces = request.data['spaces']
-
-        spaces_dict = {
-            'test': 'TST',
-            'preview': 'PRV',
-            'public': 'PBL',
-            'private': 'PRV',
-        }
-
-        # Delete previous published data
-        for space in spaces:
-            try:
-                SequenceGuide.objects.get(sequence_api_id=api_id,
-                                       space=spaces_dict[space]).delete()
-            except SequenceGuide.DoesNotExist:
-                pass  # The SequenceGuide was not published before. Nothing to do
-
-        # Get Sequence
-        sequence = Sequence.objects.get(api_id=api_id)
-
-        # Get Sequence Steps
-        steps = sequence.steps
-
-        # Generate stepdict
-        stepdict = {}
-        number = [0]
-        for step in steps:
-            stepdict = {**stepdict, **self._recursive_stepdict(step, 0, number)}
-        steplist = list(stepdict.keys())
-
-        json_stepdict = {}
-        step_pos = 0
-        for step in steplist:
-            step = {
-                step_pos: {
-                    'api_id': step,
-                    'ref_api_id': stepdict[step]['ref_api_id'],
-                    'number': stepdict[step]['number'],
-                    'title': stepdict[step]['title'],
-                    'current': stepdict[step]['current'],
-                    'level': stepdict[step]['level'],
-                }
-            }
-            json_stepdict = {**json_stepdict, **step}
-            step_pos += 1
-
-        # Write SequenceGuide
-        for space in spaces:
-            guide_sequence = SequenceGuide.objects.create(
-                sequence_api_id=sequence.api_id,
-                space=spaces_dict[space],
-                title=sequence.title,
-                first=steps[0].api_id,
-                first_ref=stepdict[steps[0].api_id]['ref_api_id'],
-                steps=json_stepdict,
-            )
-
-            # Write SequenceGuideStep
-            for step in steps:
-                self._recursive_guide_step(
-                    guide_sequence, step, stepdict, steplist)
-
-        # Save Successful publish to Sequence
-        sequence.is_published = True
-        sequence.publish_date = timezone.now()
-        sequence.save()
-
-        payload = {
-            'is_published': sequence.is_published,
-            'publish_date': sequence.publish_date,
-        }
-
-        return Response(payload,
-                        status=status.HTTP_200_OK)
-
-    def _recursive_toc(self, steps):
-        # toc = Table of Content
-        toc = []
-        for step in steps:
-            stepdict = {
-                'type': 'decision' if step.is_decision else 'step',
-                'title': step.title,
-            }
-            if step.is_decision:
-                stepdict['decisions'] = self._recursive_toc(step.decisionsteps)
-            else:
-                stepdict['substeps'] = self._recursive_toc(step.substeps)
-
-            toc.append(stepdict)
-        return toc
-
     def post(self, request, api_id):
         spaces = request.data['spaces']
 
@@ -357,36 +362,30 @@ class SequencePublishView(APIView):
         # Delete previous published data
         for space in spaces:
             try:
-                SequenceGuide.objects.get(sequence_api_id=api_id,
+                SequenceGuide.objects.get(api_id=api_id,
                                        space=spaces_dict[space]).delete()
             except SequenceGuide.DoesNotExist:
                 pass  # The SequenceGuide was not published before. Nothing to do
 
         # Get Sequence
         sequence = Sequence.objects.get(api_id=api_id)
-
+        
         # Get Sequence Steps
         steps = sequence.steps
-
-        # Get table of content
-        toc = self._recursive_toc(sequence.steps)
-
 
         # Write SequenceGuide
         for space in spaces:
             guide_sequence = SequenceGuide.objects.create(
-                sequence_api_id=sequence.api_id,
+                api_id=sequence.api_id,
                 space=spaces_dict[space],
                 title=sequence.title,
                 first=steps[0].api_id,
-                first_ref='a',
-                steps='steps',
             )
 
-            # Write SequenceGuideStep
             for step in steps:
-                self._recursive_guide_step(
-                    guide_sequence, step)
+                sequence_node = SequenceNode(step, guide_sequence, steps)
+                sequence_node.render()
+
 
         # Save Successful publish to Sequence
         sequence.is_published = True

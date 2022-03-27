@@ -221,8 +221,6 @@ class SequenceGuide(models.Model):
     ]
     id = models.AutoField(primary_key=True)
     api_id = models.UUIDField(default=uuid.uuid4)
-    sequence_id = models.CharField(
-        max_length=8)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     space = models.CharField(
@@ -231,9 +229,7 @@ class SequenceGuide(models.Model):
         default=TEST,
     )
     title = models.CharField(max_length=128)
-    first = models.CharField(max_length=8)
-    first_ref = models.CharField(max_length=8)
-    steps = models.JSONField()
+    first = models.UUIDField()
 
     class Meta:
         db_table = 'sequence_guide'
@@ -242,7 +238,6 @@ class SequenceGuide(models.Model):
 class SequenceGuideStep(models.Model):
     id = models.AutoField(primary_key=True)
     api_id = models.UUIDField(default=uuid.uuid4)
-    ref_api_id = models.UUIDField(default=uuid.uuid4)
     sequence = models.ForeignKey(
         SequenceGuide,
         on_delete=models.CASCADE,
@@ -251,14 +246,10 @@ class SequenceGuideStep(models.Model):
     updated = models.DateTimeField(auto_now=True)
     sequence_title = models.CharField(max_length=128, blank=True)
     title = models.CharField(max_length=128)
-    steps = models.CharField(max_length=2048, blank=True)
-    decisions = models.CharField(max_length=2048, blank=True)
-    first = models.CharField(max_length=8)
-    first_ref = models.CharField(max_length=8)
-    previous = models.CharField(max_length=8, blank=True)
-    previous_ref = models.CharField(max_length=8, blank=True)
-    next = models.CharField(max_length=8, blank=True)
-    next_ref = models.CharField(max_length=8, blank=True)
+    decision_steps = models.CharField(max_length=2048, blank=True)
+    first = models.UUIDField()
+    previous = models.UUIDField(null=True)
+    next = models.UUIDField(null=True)
     content = models.CharField(max_length=4096, blank=True)
 
     class Meta:
