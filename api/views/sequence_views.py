@@ -90,7 +90,7 @@ class SequenceNode():
             except ValueError:
                 return None
         
-        if node.parent.parent is not None and node.parent.parent.decision_nodes:
+        if node.parent is not None and node.parent.parent is not None and node.parent.parent.decision_nodes:
             if node.parent.substep_nodes:
                 index = node.parent.substep_nodes.index(node)
                 if index < len(node.parent.substep_nodes) - 1:
@@ -102,18 +102,20 @@ class SequenceNode():
                 index = node.parent.parent.main_sequence.index(node.parent.parent.step)
                 if index < len(node.parent.parent.main_sequence) - 1:
                     return node.parent.parent.main_sequence[index + 1].api_id
-                
-        try:
-            index = node.parent.substep_nodes.index(node)
-            if index < len(node.parent.substep_nodes) - 1:
-                return node.parent.substep_nodes[index + 1].step.api_id
             
-        except ValueError:
-            index = node.parent.decision_nodes.index(node)
-            if index < len(node.parent.decision_nodes) - 1:
-                return node.parent.decision_nodes[index + 1].step.api_id
+        if node.parent is not None:
+            try:
+                index = node.parent.substep_nodes.index(node)
+                if index < len(node.parent.substep_nodes) - 1:
+                    return node.parent.substep_nodes[index + 1].step.api_id
+                
+            except ValueError:
+                index = node.parent.decision_nodes.index(node)
+                if index < len(node.parent.decision_nodes) - 1:
+                    return node.parent.decision_nodes[index + 1].step.api_id
         
-        return self._recursive_next_step_parent(node.parent)
+            return self._recursive_next_step_parent(node.parent)
+        return None
     
     
     def render(self):
