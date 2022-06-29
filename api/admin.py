@@ -1,5 +1,5 @@
+'''
 from django.contrib import admin
-
 
 from .models import (Sequence, SequenceStep, Step, SuperStep, Explanation,
                      StepModule, DecisionStep, Module, Image, SequenceGuide,
@@ -16,3 +16,4 @@ admin.site.register(Module)
 admin.site.register(Image)
 admin.site.register(SequenceGuide)
 admin.site.register(SequenceGuideStep)
+'''

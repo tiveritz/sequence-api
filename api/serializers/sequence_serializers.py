@@ -1,21 +1,47 @@
+from rest_framework.serializers import ModelSerializer, HyperlinkedIdentityField, UUIDField
+from api.models import Sequence, Step
+from api.base.choices import StepChoices
+
+
+class SequenceSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='api:sequence', lookup_field='uuid',)
+    step = UUIDField(read_only=True, source='step.uuid')
+
+    class Meta:
+        model = Sequence
+        exclude = ['id']
+        read_only_fields = ('url',
+                            'uuid',
+                            'created',
+                            'updated',
+                            'is_published',
+                            'publish_date',
+                            'step',)
+
+    def create(self, validated_data):
+        step = Step.objects.create(type=StepChoices.SEQUENCE_STEP)
+        return Sequence.objects.create(step=step)
+
+
+'''
+
 from rest_framework import serializers
 from django.db.models import Max
 from ..models import Sequence, Step, SequenceStep
 from .step_serializers import StepSimpleSerializer
 
 
-class SequenceSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='sequence-detail',
-                                               lookup_field='api_id')
+class SequenceSerializer(ModelSerializer):
+    view_name = 'sequence-detail'
+    lookup_field = 'api_id'
+
+    url = HyperlinkedIdentityField(view_name=view_name, lookup_field=lookup_field)
 
     class Meta:
         model = Sequence
-        fields = ('api_id', 'title', 'created', 'updated', 'url',)
+        fields = '__all__'
 
     def create(self, validated_data):
-        """
-        Create a new Sequence
-        """
         return Sequence.objects.create(**validated_data)
 
 
@@ -76,3 +102,4 @@ class SequenceStepSerializer(serializers.Serializer):
             msg = 'Step already linked to Sequence. Duplicate not allowed'
             raise serializers.ValidationError(msg)
         return data
+'''

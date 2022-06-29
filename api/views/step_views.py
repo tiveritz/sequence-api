@@ -1,3 +1,59 @@
+
+from rest_framework import status
+from rest_framework.generics import ListAPIView
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.filters import SearchFilter, OrderingFilter
+from core.pagination import ListPagination
+
+from api.models import Step
+from api.serializers.step_serializers import StepSerializer
+
+
+class StepView(APIView):
+    def get(self, request, uuid):
+        step = Step.objects.get(uuid=uuid)
+        serializer = StepSerializer(step, context={'request': request})
+        return Response(serializer.data)
+
+    def patch(self, request, uuid):
+        try:
+            step = Step.objects.get(uuid=uuid)
+        except Step.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        context = {'request': request}
+        serializer = StepSerializer(step, data=request.data, context=context, partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
+
+    def delete(self, request, uuid):
+        try:
+            Step.objects.get(uuid=uuid).delete()
+        except Step.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class StepListView(ListAPIView):
+    queryset = Step.objects.all().order_by('-updated')
+    serializer_class = StepSerializer
+    pagination_class = ListPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title']
+    ordering_fields = ['title', 'created', 'updated']
+
+    def post(self, request):
+        serializer = StepSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+'''
 from django.db.models import F
 from django.db.models import Max
 from rest_framework import status
@@ -179,28 +235,6 @@ class SuperDetailView(APIView):
         SuperStep.objects.filter(super=super,
                                  sub=sub).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-
-class StepListView(ListAPIView):
-    """
-    View to Steps
-    """
-    queryset = Step.objects.all().order_by('-updated')
-    serializer_class = StepSerializer
-    pagination_class = ListPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['title']
-    ordering_fields = ['title', 'created', 'updated']
-
-    def post(self, request, format=None):
-        serializer = StepSerializer(data=request.data,
-                                    context={'request': request})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
 
 
 class StepDetailView(APIView):
@@ -437,3 +471,4 @@ class StepModuleView(APIView):
 
             return Response(status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+'''

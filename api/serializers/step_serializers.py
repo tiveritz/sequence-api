@@ -1,3 +1,60 @@
+from rest_framework.serializers import (
+    CharField,
+    HyperlinkedIdentityField,
+    ModelSerializer,)
+
+from api.base.choices import StepChoices
+from api.base.exceptions import NotAValidStepType
+from api.models import Sequence, Step
+
+
+class StepSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='api:step', lookup_field='uuid',)
+
+    title = CharField(required=False)
+    type = CharField(required=False)
+
+    class Meta:
+        model = Step
+        exclude = ['id']
+        read_only_fields = ('uuid', 'created', 'updated')
+
+    def validate_type(self, value):
+        if value not in StepChoices:
+            raise NotAValidStepType
+        return value
+
+    def create(self, validated_data):
+        return Step.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
+
+'''
+    uuid = models.UUIDField(blank=False, null=False, default=uuid.uuid4)
+    created = models.DateTimeField(blank=False, null=False, auto_now_add=True)
+    updated = models.DateTimeField(blank=False, null=False, auto_now=True)
+    title = models.CharField(max_length=128, blank=True, null=True)
+    type = models.CharField(max_length=13,
+                            blank=False,
+                            null=False,
+                            choices=STEP_TYPE_CHOICES,
+                            default=STEP)
+
+    def create(self, validated_data):
+        """
+        Create a new Step
+        """
+        return Step.objects.create(**validated_data)
+'''
+
+
+'''
 from rest_framework import serializers
 from django.db.models import Max
 from ..models import (Step, SuperStep, DecisionStep, Module, StepModule,
@@ -6,24 +63,6 @@ from ..models import (Step, SuperStep, DecisionStep, Module, StepModule,
 from ..functions.circular_reference import has_circular_reference
 from .recursive_serializers import RecursiveField
 from .module_serializer import ModuleListSerializer
-
-
-class StepSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='step-detail',
-                                               lookup_field='api_id',)
-
-    class Meta:
-        model = Step
-        fields = ('api_id', 'title', 'created', 'updated', 'is_super',
-                  'is_decision', 'url',)
-
-    def create(self, validated_data):
-        """
-        Create a new Step
-        """
-        return Step.objects.create(**validated_data)
-
-
 class StepSimpleSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(
         view_name='step-detail', lookup_field='api_id')
@@ -201,7 +240,7 @@ class StepModuleSerializer(serializers.Serializer):
         return step_module
 
 
-'''
+
     def validate(self, data):
         step_api_id = data['step_api_id']
         api_id = data['api_id']

@@ -11,19 +11,19 @@ class StatisticView(APIView):
 
     def get(self, request):
         """
-        Return statisitcal data
+        Return statistical data
         """
         sequence_count = Sequence.objects.count()
         steps_count = Step.objects.count()
         images_count = Image.objects.count()
 
         superstep_ids = SuperStep.objects.values_list(
-            'super__api_id', flat=True)
-        substeps_count = Step.objects.exclude(api_id__in=superstep_ids).count()
+            'super__uuid', flat=True)
+        substeps_count = Step.objects.exclude(uuid__in=superstep_ids).count()
         supersteps_count = superstep_ids.count()
 
         decision_ids = DecisionStep.objects.values_list(
-            'super__api_id', flat=True)
+            'super__uuid', flat=True)
         decisions_count = decision_ids.count()
 
         text_modules_count = Explanation.objects.filter(type='text').count()
