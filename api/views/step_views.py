@@ -25,7 +25,10 @@ class StepView(RetrieveDestroyAPIView):
         step = Step.objects.get(uuid=uuid)
 
         context = {'request': request}
-        serializer = StepSerializer(step, data=request.data, context=context, partial=True)
+        serializer = StepSerializer(step,
+                                    data=request.data,
+                                    context=context,
+                                    partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
@@ -44,7 +47,8 @@ class StepListView(ListCreateAPIView):
     ordering_fields = ['title', 'created', 'updated']
 
     def post(self, request):
-        serializer = StepSerializer(data=request.data, context={'request': request})
+        serializer = StepSerializer(data=request.data,
+                                    context={'request': request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
@@ -66,8 +70,10 @@ class SubstepAddView(CreateAPIView):
 
 class SubstepDeleteView(DestroyAPIView):
     def delete(self, request, uuid):
-        superstep = SuperStep.objects.get(super__uuid=uuid, sub__uuid=request.data['sub'])
-        max_pos = SuperStep.objects.filter(super__uuid=uuid).aggregate(Max('pos'))['pos__max']
+        superstep = SuperStep.objects.get(super__uuid=uuid,
+                                          sub__uuid=request.data['sub'])
+        max_pos = SuperStep.objects.filter(super__uuid=uuid) \
+                                   .aggregate(Max('pos'))['pos__max']
 
         SuperStep.objects.filter(super__uuid=uuid) \
                          .filter(pos__gt=superstep.pos) \

@@ -11,4 +11,5 @@ class SequenceGuideSerializer(serializers.ModelSerializer):
 class StepGuideSerializer(serializers.ModelSerializer):
     class Meta:
         model = SequenceGuideStep
-        fields = ('api_id', 'sequence_title', 'title', 'first', 'previous', 'next', 'decision_steps', 'content',)
+        fields = ('api_id', 'sequence_title', 'title', 'first', 'previous',
+                  'next', 'decision_steps', 'content',)

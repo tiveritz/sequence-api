@@ -12,10 +12,6 @@ class ExplanationSerializer(serializers.ModelSerializer):
         fields = ['api_id', 'type', 'title', 'created', 'updated', 'url']
 
     def create(self, validated_data):
-        """
-        Create the Sequenceo, generate a Sequenceo Uri Id and link it to the
-        Sequenceo
-        """
         return Explanation.objects.create(**validated_data)
 
 

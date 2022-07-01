@@ -26,6 +26,9 @@ def test_get_step_fields(client, step):
     response = client.get(url)
 
     expected_fields = ['url',
+                       'url_add_substep',
+                       'url_order_substeps',
+                       'url_delete_substep',
                        'uuid',
                        'created',
                        'updated',

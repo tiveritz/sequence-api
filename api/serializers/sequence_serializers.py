@@ -1,10 +1,13 @@
-from rest_framework.serializers import ModelSerializer, HyperlinkedIdentityField, UUIDField
+from rest_framework.serializers import (ModelSerializer,
+                                        HyperlinkedIdentityField,
+                                        UUIDField)
 from api.models import Sequence, Step
 from api.base.choices import StepChoices
 
 
 class SequenceSerializer(ModelSerializer):
-    url = HyperlinkedIdentityField(view_name='api:sequence', lookup_field='uuid',)
+    url = HyperlinkedIdentityField(view_name='api:sequence',
+                                   lookup_field='uuid',)
     step = UUIDField(read_only=True, source='step.uuid')
 
     class Meta:

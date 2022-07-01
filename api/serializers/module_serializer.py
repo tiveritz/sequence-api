@@ -5,9 +5,6 @@ from .media_serializers import ImageSerializer
 
 
 class ModuleListSerializer(serializers.Serializer):
-    """ Serializer that renders each instance with its own specific serializer
-    """
-
     @classmethod
     def get_serializer(cls, model):
         if model == Explanation:

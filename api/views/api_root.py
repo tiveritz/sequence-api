@@ -9,5 +9,4 @@ class APIRoot(APIView):
             'statistics': reverse('api:statistics', request=request),
             'sequences': reverse('api:sequence-list', request=request),
             'steps': reverse('api:step-list', request=request),
-            'supersteps': reverse('api:superstep-list', request=request),
         })

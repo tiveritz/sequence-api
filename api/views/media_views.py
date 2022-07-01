@@ -14,10 +14,6 @@ from ..serializers.media_serializers import (ImageSerializer,
 
 
 class ImageView(APIView):
-    """
-    View to Images
-    """
-
     def get(self, request):
         images = Image.objects.all().order_by('-updated')
         serializer = ImageSerializer(images,
@@ -49,10 +45,6 @@ class ImageView(APIView):
 
 
 class ImageDetailView(APIView):
-    """
-    Detail view to Images
-    """
-
     def get(self, request, api_id):
         try:
             images = Image.objects.get(api_id=api_id)
@@ -85,9 +77,6 @@ class ImageDetailView(APIView):
 
 
 class ImageRenderView(APIView):
-    """
-    Image Render
-    """
     renderer_classes = [JPEGRenderer, PNGRenderer]
     authentication_classes = []
 

@@ -1,18 +1,16 @@
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import Sequence, Step, SuperStep, DecisionStep, Explanation, Image
+from ..models import (Sequence,
+                      Step,
+                      SuperStep,
+                      DecisionStep,
+                      Explanation,
+                      Image)
 
 
 class StatisticView(APIView):
-    """
-    View to statistical data of the content
-    """
-
     def get(self, request):
-        """
-        Return statistical data
-        """
         sequence_count = Sequence.objects.count()
         steps_count = Step.objects.count()
         images_count = Image.objects.count()

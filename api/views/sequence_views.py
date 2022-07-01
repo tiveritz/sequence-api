@@ -29,7 +29,8 @@ class SequenceListView(ListCreateAPIView):
     pagination_class = ListPagination
 
     def post(self, request, format=None):
-        serializer = SequenceSerializer(data=request.data, context={'request': request})
+        serializer = SequenceSerializer(data=request.data,
+                                        context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
