@@ -95,17 +95,6 @@ def test_update_step(client, step):
 
 
 @pytest.mark.django_db
-def test_update_non_existing_step_raises_error(client):
-    kwargs = {'uuid': uuid.uuid4()}
-    url = reverse('api:step', kwargs=kwargs)
-
-    payload = {'title': 'new_title'}
-    response = client.patch(url, payload)
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-@pytest.mark.django_db
 def test_delete_step(client, step):
     kwargs = {'uuid': step.uuid}
     url = reverse('api:step', kwargs=kwargs)
@@ -115,16 +104,3 @@ def test_delete_step(client, step):
 
     with pytest.raises(Step.DoesNotExist):
         Step.objects.get(uuid=step.uuid)
-
-@pytest.mark.django_db
-def test_delete_non_existing_step_raises_error(client):
-    kwargs = {'uuid': uuid.uuid4()}
-    url = reverse('api:step', kwargs=kwargs)
-    response = client.delete(url)
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-
-
-
-# [ ] cannot alter added, updated during create, update
-# [ ] test step list

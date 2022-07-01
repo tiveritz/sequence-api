@@ -1,122 +1,56 @@
 from django.urls import path
+
 from rest_framework.urlpatterns import format_suffix_patterns
-from .views import (api_root,
-                    general_views,
-                    sequence_views,
-                    step_views,
-                    superstep_views,)
+
+from api.views.api_root import APIRoot
+from api.views.general_views import StatisticView
+from api.views.sequence_views import SequenceListView, SequenceView
+from api.views.step_views import (StepListView,
+                                  StepView,
+                                  StepLinkableListView,
+                                  SubstepAddView,
+                                  SubstepDeleteView,
+                                  SubstepOrderView,
+                                  StepUsageView)
+
 
 app_name = 'api'
 urlpatterns = [
-    # API root
     path('',
-         api_root.APIRoot.as_view(),
+         APIRoot.as_view(),
          name='root'),
 
-    # Steps
-    path('steps/<uuid:uuid>/',
-         step_views.StepView.as_view(),
-         name='step'),
-    path('steps/',
-         step_views.StepListView.as_view(),
-         name='step-list'),
-
-    # Sequences
-    path('sequences/<uuid:uuid>/',
-         sequence_views.SequenceView.as_view(),
-         name='sequence'),
     path('sequences/',
-         sequence_views.SequenceListView.as_view(),
+         SequenceListView.as_view(),
          name='sequence-list'),
+    path('sequences/<uuid:uuid>/',
+         SequenceView.as_view(),
+         name='sequence'),
 
-    # Supersteps
-    path('supersteps/',
-         superstep_views.SuperStepView.as_view(),
-         name='superstep'),
+    path('steps/',
+         StepListView.as_view(),
+         name='step-list'),
+    path('steps/<uuid:uuid>/',
+         StepView.as_view(),
+         name='step'),
+    path('steps/<uuid:uuid>/linkable/',
+         StepLinkableListView.as_view(),
+         name='step-linkable'),
+    path('steps/<uuid:uuid>/steps/add/',
+         SubstepAddView.as_view(),
+         name='step-add'),
+    path('steps/<uuid:uuid>/steps/order/',
+         SubstepOrderView.as_view(),
+         name='step-order'),
+    path('steps/<uuid:uuid>/steps/delete/',
+         SubstepDeleteView.as_view(),
+         name='step-delete'),
+    path('steps/<uuid:uuid>/usage/',
+         StepUsageView.as_view(),
+         name='step-usage'),
 
-    # General Views
     path('statistics/',
-         general_views.StatisticView.as_view(),
-         name='statistics'),
-
-]
+         StatisticView.as_view(),
+         name='statistics')]
 
 urlpatterns = format_suffix_patterns(urlpatterns)
-
-
-'''
-# Sequence Views
-path('sequences/<str:api_id>/steps/',
-     sequence_views.SequenceStepView.as_view(),
-     name='sequence-step'),
-path('sequences/<str:api_id>/steps/<str:step_api_id>/',
-     sequence_views.SequenceStepDetailView.as_view(),
-     name='sequence-step-detail'),
-path('sequences/<str:api_id>/linkable/',
-     sequence_views.SequenceLinkableView.as_view(),
-     name='sequence-linkable'),
-path('sequences/<str:api_id>/publish/',
-     sequence_views.SequencePublishView.as_view(),
-     name='sequence-publish'),
-
-# Step Views
-path('steps/<str:api_id>/steps/',
-     step_views.SubstepView.as_view(),
-     name='sub-step'),
-path('steps/<str:api_id>/modules/',
-     step_views.StepModuleView.as_view(),
-     name='step-module'),
-path('steps/<str:api_id>/steps/<str:step_api_id>/',
-     step_views.SuperDetailView.as_view(),
-     name='super-detail'),
-path('steps/<str:api_id>/linkable/',
-     step_views.StepLinkableView.as_view(),
-     name='step-linkable'),
-path('steps/<str:api_id>/linkablemodules/',
-     step_views.StepLinkableModulesView.as_view(),
-     name='step-linkable-modules'),
-path('steps/<str:api_id>/linkableimages/',
-     step_views.StepLinkableImagesView.as_view(),
-     name='step-linkable-images'),
-
-# Decision Views
-path('steps/<str:api_id>/decisions/',
-     step_views.DecisionView.as_view(),
-     name='decision-step'),
-path('steps/<str:api_id>/linkable-decisions/',
-     step_views.DecisionLinkableView.as_view(),
-     name='decision-linkable'),
-
-# Explanation Views
-path('explanation/',
-     explanation_views.ExplanationView.as_view(),
-     name='explanation'),
-path('explanation/<str:api_id>/',
-     explanation_views.ExplanationDetailView.as_view(),
-     name='explanation-detail'),
-
-# Guide Views
-path('guides/sequences/<str:space>/',
-     guide_views.SequenceGuideListView.as_view(),
-     name='sequence-guide-list'),
-#path('guides/sequence/step/',
-#     guide_views.StepGuideListView.as_view(),
-#     name='step-guide-list'),
-path('guides/sequence/<str:api_id>/<str:space>/',
-     guide_views.SequenceGuideView.as_view(),
-     name='sequence-guide'),
-path('guides/sequence/<str:step_api_id>/',
-     guide_views.StepGuideView.as_view(),
-     name='step-guide'),
-
-# Media Views
-path('media/images/',
-     media_views.ImageView.as_view(),
-     name='images'),
-path('media/images/<str:api_id>',
-     media_views.ImageDetailView.as_view(),
-     name='image-detail'),
-path('media/<str:api_id>.<str:media_type>/',
-     media_views.ImageRenderView.as_view(),
-     name='images-render'),
-'''

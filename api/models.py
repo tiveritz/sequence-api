@@ -18,7 +18,7 @@ class Step(models.Model):
                             default=StepChoices.STEP)
 
     def __str__(self):
-        return f'{self.uuid}, {self.title}'
+        return f'{self.uuid}'
 
     class Meta:
         db_table = 'step'
@@ -31,16 +31,11 @@ class Sequence(models.Model):
     updated = models.DateTimeField(auto_now=True)
     is_published = models.BooleanField(default=False)
     publish_date = models.DateTimeField(null=True)
-    step = models.OneToOneField(
-        Step,
-        blank=False,
-        null=False,
-        on_delete=models.CASCADE,
-        related_name='step_decision'
-    )
-
-    def __str__(self):
-        return f'{self.uuid}, {self.title}'
+    step = models.OneToOneField(Step,
+                                blank=False,
+                                null=False,
+                                on_delete=models.CASCADE,
+                                related_name='step_decision')
 
     class Meta:
         db_table = 'sequence'
@@ -54,15 +49,12 @@ class SuperStep(models.Model):
                               blank=False,
                               null=False,
                               on_delete=models.CASCADE,
-                              related_name='super_superstep')
+                              related_name='superstep_super')
     sub = models.ForeignKey(Step,
                             blank=False,
                             null=False,
                             on_delete=models.CASCADE,
-                            related_name='sub_superstep')
-
-    def __str__(self):
-        return f'{self.super.uuid} -> {self.sub.uuid}: {self.pos}'
+                            related_name='superstep_sub')
 
     class Meta:
         db_table = 'superstep'
@@ -100,9 +92,6 @@ class Explanation(models.Model):
     title = models.CharField(max_length=128, blank=True)
     content = models.CharField(max_length=4096, blank=True)
 
-    def __str__(self):
-        return f'{self.uuid}, {self.title}'
-
 
 class Image(models.Model):
     id = models.AutoField(primary_key=True)
@@ -116,9 +105,6 @@ class Image(models.Model):
     @property
     def type(self):
         return 'image'
-
-    def __str__(self):
-        return f'{self.uuid}, {self.title}'
 
 
 class Module(models.Model):

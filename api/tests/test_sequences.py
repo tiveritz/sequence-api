@@ -48,14 +48,16 @@ def test_create_sequence(client):
 
 
 @pytest.mark.django_db
-def test_sequence_step_type(client):
+def test_add_sequence_creates_step(client):
     url = reverse('api:sequence-list')
     response = client.post(url)
 
+    assert response.data['uuid'] is not None
+
     step_uuid = response.data['step']
     step = Step.objects.get(uuid=step_uuid)
-
     assert step.type == StepChoices.SEQUENCE_STEP
+
 
 @pytest.mark.django_db
 def test_create_sequence_ignores_uuid(client):

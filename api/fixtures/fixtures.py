@@ -30,12 +30,17 @@ def sequence():
 
 
 @pytest.fixture
-def make_superstep(make_step):
-    def _superstep(sub=1):
-        super = make_step()
+def superstep(make_superstep):
+    return make_superstep()
 
+
+@pytest.fixture
+def make_supersteps(make_step):
+    def _supersteps(super, sub=1):
+        supersteps = []
         for pos in range(sub):
             sub = make_step()
-            SuperStep.objects.create(super=super, sub=sub, pos=pos)
-        return super
-    return _superstep
+            superstep = SuperStep.objects.create(super=super, sub=sub, pos=pos)
+            supersteps.append(superstep)
+        return supersteps
+    return _supersteps
