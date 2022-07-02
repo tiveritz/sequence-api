@@ -26,9 +26,9 @@ def test_get_step_fields(client, step):
     response = client.get(url)
 
     expected_fields = ['url',
-                       'url_add_substep',
-                       'url_order_substeps',
-                       'url_delete_substep',
+                       'url_link_step',
+                       'url_order_linked_steps',
+                       'url_delete_linked_step',
                        'uuid',
                        'created',
                        'updated',
@@ -48,24 +48,24 @@ def test_create_empty_step(client):
 
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    'step_type',
-    ['STEP', 'SEQUENCE_STEP', 'DECISION_STEP'])
-def test_create_step(client, step_type):
+@pytest.mark.parametrize('step_type',
+                         ['DECISION', 'SEQUENCE', 'STEP', 'SUPER'])
+def test_create_step(faker, client, step_type):
     url = reverse('api:step-list')
-    payload = {'title': 'mystep',
+    title = faker.word()
+    payload = {'title': title,
                'type': step_type}
 
     response = client.post(url, payload)
     assert response.status_code == status.HTTP_201_CREATED
-    assert response.data['title'] == 'mystep'
+    assert response.data['title'] == title
     assert response.data['type'] == step_type
 
 
 @pytest.mark.django_db
 def test_create_step_invalid_type_raises_error(client):
     url = reverse('api:step-list')
-    payload = {'title': 'mystep',
+    payload = {'title': '',
                'type': 'NOT_A_VALID_TYPE'}
 
     response = client.post(url, payload)

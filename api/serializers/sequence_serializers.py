@@ -22,5 +22,5 @@ class SequenceSerializer(ModelSerializer):
                             'step')
 
     def create(self, validated_data):
-        step = Step.objects.create(type=StepChoices.SEQUENCE_STEP)
+        step = Step.objects.create(type=StepChoices.SEQUENCE)
         return Sequence.objects.create(step=step)

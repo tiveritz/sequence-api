@@ -1,42 +1,42 @@
-from ..models import SuperStep
+from ..models import LinkedStep
 
 
-def get_substep_tree(super):
-    substeps = SuperStep.objects.filter(super=super)
-    substep_tree = []
-
-    # Add self
-    substep_tree.append(super)
-
-    # Recursively add substeps
-    for substep in substeps:
-        substep_tree = get_substep_tree(substep.sub)
-        if substep_tree:
-            substep_tree.append(substep)
-    return substep_tree
-
-
-def get_superstep_tree(sub):
-    supersteps = SuperStep.objects.filter(sub=sub)
-    superstep_tree = []
+def get_sub_step_tree(super):
+    sub_steps = LinkedStep.objects.filter(super=super)
+    sub_step_tree = []
 
     # Add self
-    superstep_tree.append(sub)
+    sub_step_tree.append(super)
 
-    # Recursively add supersteps
-    for superstep in supersteps:
-        superstep_tree = get_superstep_tree(superstep.super)
-        if superstep_tree:
-            superstep_tree.append(superstep)
-    return superstep_tree
+    # Recursively add sub_steps
+    for sub_step in sub_steps:
+        sub_step_tree = get_sub_step_tree(sub_step.sub)
+        if sub_step_tree:
+            sub_step_tree.append(sub_step)
+    return sub_step_tree
+
+
+def get_super_step_tree(sub):
+    super_steps = LinkedStep.objects.filter(sub=sub)
+    super_step_tree = []
+
+    # Add self
+    super_step_tree.append(sub)
+
+    # Recursively add super_steps
+    for super_step in super_steps:
+        super_step_tree = get_super_step_tree(super_step.super)
+        if super_step_tree:
+            super_step_tree.append(super_step)
+    return super_step_tree
 
 
 def has_circular_reference(step, check):
-    substeps = get_substep_tree(step)
-    supersteps = get_superstep_tree(step)
+    sub_steps = get_sub_step_tree(step)
+    super_steps = get_super_step_tree(step)
 
-    if check in substeps:
+    if check in sub_steps:
         return True
-    if check in supersteps:
+    if check in super_steps:
         return True
     return False

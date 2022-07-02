@@ -41,7 +41,7 @@ class Sequence(models.Model):
         db_table = 'sequence'
 
 
-class SuperStep(models.Model):
+class LinkedStep(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(blank=False, null=False, default=uuid.uuid4)
     pos = models.IntegerField(blank=False, null=False)
@@ -49,34 +49,15 @@ class SuperStep(models.Model):
                               blank=False,
                               null=False,
                               on_delete=models.CASCADE,
-                              related_name='superstep_super')
+                              related_name='linked_step_super')
     sub = models.ForeignKey(Step,
                             blank=False,
                             null=False,
                             on_delete=models.CASCADE,
-                            related_name='superstep_sub')
+                            related_name='linked_step_sub')
 
     class Meta:
-        db_table = 'superstep'
-
-
-class DecisionStep(models.Model):
-    id = models.AutoField(primary_key=True)
-    uuid = models.UUIDField(blank=False, null=False, default=uuid.uuid4)
-    pos = models.IntegerField(blank=False, null=False)
-    super = models.ForeignKey(Step,
-                              blank=False,
-                              null=False,
-                              on_delete=models.CASCADE,
-                              related_name='super_decisionstep')
-    sub = models.ForeignKey(Step,
-                            blank=False,
-                            null=False,
-                            on_delete=models.CASCADE,
-                            related_name='sup_decisionstep')
-
-    class Meta:
-        db_table = 'decisionstep'
+        db_table = 'linked_step'
 
 
 class Explanation(models.Model):

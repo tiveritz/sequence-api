@@ -1,16 +1,22 @@
-boto3==1.24.19
-coverage==6.4.1
+# BASE
+boto3==1.24.22
 cryptography==37.0.2
-Django==4.0.5
 django-filter==22.1
 django-multiselectfield==0.1.12
 django-storages==1.12.3
+Django==4.0.5
 djangorestframework==3.13.1
-Pillow==9.1.1
+Pillow==9.2.0
 psycopg2-binary==2.9.3
-pytest==7.1.2
-pytest-cov==3.0.0
-pytest-django==4.5.2
 python-dotenv==0.20.0
 pytz==2022.1
+
+# LOCAL
+coverage==6.4.1
+pytest-cov==3.0.0
+pytest-django==4.5.2
+pytest-faker==2.0.0
+pytest==7.1.2
+
+# PROD
 gunicorn==20.1.0

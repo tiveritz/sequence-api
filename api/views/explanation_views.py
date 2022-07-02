@@ -7,9 +7,6 @@ from ..serializers.explanation_serializers import (ExplanationSerializer,
 
 
 class ExplanationView(APIView):
-    """
-    View to Explanation Text Detail
-    """
     def get(self, request):
         explanations = Explanation.objects.all().order_by('-updated')
         serializer = ExplanationSerializer(explanations,
@@ -29,9 +26,6 @@ class ExplanationView(APIView):
 
 
 class ExplanationDetailView(APIView):
-    """
-    View to Explanation Detail
-    """
     def get(self, request, api_id):
         try:
             explanation = Explanation.objects.get(api_id=api_id)

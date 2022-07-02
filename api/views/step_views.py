@@ -10,7 +10,7 @@ from rest_framework.generics import (CreateAPIView,
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 
-from api.models import Step, SuperStep
+from api.models import Step, LinkedStep
 from api.serializers.step_serializers import (SubstepAddSerializer,
                                               StepSerializer)
 
@@ -70,17 +70,17 @@ class SubstepAddView(CreateAPIView):
 
 class SubstepDeleteView(DestroyAPIView):
     def delete(self, request, uuid):
-        superstep = SuperStep.objects.get(super__uuid=uuid,
-                                          sub__uuid=request.data['sub'])
-        max_pos = SuperStep.objects.filter(super__uuid=uuid) \
-                                   .aggregate(Max('pos'))['pos__max']
+        linked_step = LinkedStep.objects.get(super__uuid=uuid,
+                                             sub__uuid=request.data['sub'])
+        max_pos = LinkedStep.objects.filter(super__uuid=uuid) \
+                                    .aggregate(Max('pos'))['pos__max']
 
-        SuperStep.objects.filter(super__uuid=uuid) \
-                         .filter(pos__gt=superstep.pos) \
-                         .filter(pos__lte=max_pos) \
-                         .update(pos=F('pos') - 1)
+        LinkedStep.objects.filter(super__uuid=uuid) \
+                          .filter(pos__gt=linked_step.pos) \
+                          .filter(pos__lte=max_pos) \
+                          .update(pos=F('pos') - 1)
 
-        superstep.delete()
+        linked_step.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -89,22 +89,22 @@ class SubstepOrderView(ListAPIView):
     def post(self, request, uuid):
         from_index = request.data['from_index']
         to_index = request.data['to_index']
-        superstep = SuperStep.objects.get(super__uuid=uuid, pos=from_index)
+        linked_step = LinkedStep.objects.get(super__uuid=uuid, pos=from_index)
 
         if from_index < to_index:  # Move down
-            SuperStep.objects.filter(super__uuid=uuid) \
+            LinkedStep.objects.filter(super__uuid=uuid) \
                 .filter(pos__gt=from_index) \
                 .filter(pos__lte=to_index) \
                 .update(pos=F('pos') - 1)
 
         if from_index > to_index:  # Move up
-            SuperStep.objects.filter(super__uuid=uuid) \
-                .filter(pos__lt=from_index) \
-                .filter(pos__gte=to_index) \
-                .update(pos=F('pos') + 1)
+            LinkedStep.objects.filter(super__uuid=uuid) \
+                             .filter(pos__lt=from_index) \
+                             .filter(pos__gte=to_index) \
+                             .update(pos=F('pos') + 1)
 
-        superstep.pos = to_index
-        superstep.save()
+        linked_step.pos = to_index
+        linked_step.save()
 
         return Response(status=status.HTTP_200_OK)
 

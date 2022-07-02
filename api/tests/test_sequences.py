@@ -56,7 +56,7 @@ def test_add_sequence_creates_step(client):
 
     step_uuid = response.data['step']
     step = Step.objects.get(uuid=step_uuid)
-    assert step.type == StepChoices.SEQUENCE_STEP
+    assert step.type == StepChoices.SEQUENCE
 
 
 @pytest.mark.django_db

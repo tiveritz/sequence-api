@@ -2,7 +2,7 @@ import pytest
 
 from rest_framework.test import APIClient
 
-from api.models import Sequence, Step, SuperStep
+from api.models import Sequence, Step, LinkedStep
 from api.base.choices import StepChoices
 
 
@@ -25,22 +25,19 @@ def step(make_step):
 
 @pytest.fixture
 def sequence():
-    step = Step.objects.create(type=StepChoices.SEQUENCE_STEP)
+    step = Step.objects.create(type=StepChoices.SEQUENCE)
     return Sequence.objects.create(step=step)
 
 
 @pytest.fixture
-def superstep(make_superstep):
-    return make_superstep()
-
-
-@pytest.fixture
-def make_supersteps(make_step):
-    def _supersteps(super, sub=1):
-        supersteps = []
+def make_linked_steps(make_step):
+    def _linked_steps(super, sub=1):
+        linked_steps = []
         for pos in range(sub):
             sub = make_step()
-            superstep = SuperStep.objects.create(super=super, sub=sub, pos=pos)
-            supersteps.append(superstep)
-        return supersteps
-    return _supersteps
+            linked_step = LinkedStep.objects.create(super=super,
+                                                    sub=sub,
+                                                    pos=pos)
+            linked_steps.append(linked_step)
+        return linked_steps
+    return _linked_steps

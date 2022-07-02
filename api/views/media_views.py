@@ -68,7 +68,7 @@ class ImageDetailView(APIView):
         # Failed Storage deletion will not do anything
         client.delete_object(
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            Key=f"{settings.MEDIAFILES_LOCATION}/{image.image.name}"
+            Key=f'{settings.MEDIAFILES_LOCATION}/{image.image.name}'
             )
 
         # Delete image link in database
