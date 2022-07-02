@@ -13,8 +13,8 @@ def client():
 
 @pytest.fixture
 def make_step():
-    def _step():
-        return Step.objects.create()
+    def _step(type=None):
+        return Step.objects.create(type=type or StepChoices.STEP)
     return _step
 
 
@@ -32,6 +32,9 @@ def sequence():
 @pytest.fixture
 def make_linked_steps(make_step):
     def _linked_steps(super, sub=1):
+        super.type = StepChoices.SUPER
+        super.save()
+
         linked_steps = []
         for pos in range(sub):
             sub = make_step()

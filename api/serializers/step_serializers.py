@@ -58,7 +58,7 @@ class StepDetailSerializer(ModelSerializer):
                             'updated')
 
 
-class SubstepAddSerializer(ModelSerializer):
+class LinkStepSerializer(ModelSerializer):
     super = UUIDField(read_only=True)
     sub = UUIDField()
     pos = IntegerField(read_only=True)
@@ -74,4 +74,9 @@ class SubstepAddSerializer(ModelSerializer):
         max_pos = LinkedStep.objects.filter(super=super) \
                                     .aggregate(Max('pos'))['pos__max']
         new_pos = 0 if max_pos is None else max_pos + 1
-        return LinkedStep.objects.create(super=super, sub=sub, pos=new_pos)
+        linked_step = LinkedStep.objects.create(super=super,
+                                                sub=sub,
+                                                pos=new_pos)
+
+        super.update_type(StepChoices.SUPER)
+        return linked_step

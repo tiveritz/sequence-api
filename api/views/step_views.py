@@ -12,7 +12,7 @@ from rest_framework.response import Response
 
 from api.base.choices import StepChoices
 from api.models import Step, LinkedStep
-from api.serializers.step_serializers import (SubstepAddSerializer,
+from api.serializers.step_serializers import (LinkStepSerializer,
                                               StepDetailSerializer,
                                               StepSerializer)
 
@@ -43,7 +43,7 @@ class StepView(RetrieveDestroyAPIView):
 
 
 class StepListView(ListCreateAPIView):
-    queryset = Step.objects.exclude(type__in=StepChoices.SEQUENCE) \
+    queryset = Step.objects.exclude(type=StepChoices.SEQUENCE) \
                            .order_by('-updated')
     serializer_class = StepSerializer
     pagination_class = ListPagination
@@ -64,16 +64,16 @@ class StepLinkableListView(ListAPIView):
     pass
 
 
-class SubstepAddView(CreateAPIView):
+class LinkStepView(CreateAPIView):
     def post(self, request, uuid):
         context = {'uuid': uuid}
-        serializer = SubstepAddSerializer(data=request.data, context=context)
+        serializer = LinkStepSerializer(data=request.data, context=context)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-class SubstepDeleteView(DestroyAPIView):
+class LinkedStepDeleteView(DestroyAPIView):
     def delete(self, request, uuid):
         linked_step = LinkedStep.objects.get(super__uuid=uuid,
                                              sub__uuid=request.data['sub'])
@@ -87,10 +87,13 @@ class SubstepDeleteView(DestroyAPIView):
 
         linked_step.delete()
 
+        if max_pos == 0:
+            Step.objects.filter(uuid=uuid).update(type=StepChoices.STEP)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class SubstepOrderView(ListAPIView):
+class LinkedStepOrderView(ListAPIView):
     def post(self, request, uuid):
         from_index = request.data['from_index']
         to_index = request.data['to_index']

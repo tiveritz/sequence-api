@@ -20,6 +20,10 @@ class Step(models.Model):
     def __str__(self):
         return f'{self.uuid}'
 
+    def update_type(self, type):
+        self.type = type
+        self.save()
+
     class Meta:
         db_table = 'step'
 
@@ -44,7 +48,7 @@ class Sequence(models.Model):
 class LinkedStep(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(blank=False, null=False, default=uuid.uuid4)
-    pos = models.IntegerField(blank=False, null=False)
+    pos = models.IntegerField(blank=False, null=False, default=0)
     super = models.ForeignKey(Step,
                               blank=False,
                               null=False,

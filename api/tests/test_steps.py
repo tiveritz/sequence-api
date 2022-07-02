@@ -5,6 +5,7 @@ import uuid
 from django.urls import reverse
 from rest_framework import status
 
+from api.base.choices import StepChoices
 from api.models import Step
 
 
@@ -53,6 +54,21 @@ def test_get_step_fields(client, step):
     received_fields = response.data.keys()
 
     assert set(expected_fields) == set(received_fields)
+
+
+@pytest.mark.django_db
+def test_get_step_list_excludes_sequence_types(client, make_step):
+    url = reverse('api:step-list')
+
+    expected_step_uuids = []
+    for type in [StepChoices.DECISION, StepChoices.STEP, StepChoices.SUPER]:
+        step = make_step(type=type)
+        expected_step_uuids.append(str(step.uuid))
+
+    response = client.get(url)
+    received_step_uuids = [i['uuid'] for i in response.data['results']]
+
+    assert set(expected_step_uuids) == set(received_step_uuids)
 
 
 @pytest.mark.django_db
