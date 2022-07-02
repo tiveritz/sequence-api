@@ -10,15 +10,19 @@ from rest_framework.generics import (CreateAPIView,
 from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.response import Response
 
+from api.base.choices import StepChoices
 from api.models import Step, LinkedStep
 from api.serializers.step_serializers import (SubstepAddSerializer,
+                                              StepDetailSerializer,
                                               StepSerializer)
 
 
 class StepView(RetrieveDestroyAPIView):
+    serializer_class = StepDetailSerializer
+
     def get(self, request, uuid):
         step = Step.objects.get(uuid=uuid)
-        serializer = StepSerializer(step, context={'request': request})
+        serializer = StepDetailSerializer(step, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request, uuid):
@@ -39,7 +43,8 @@ class StepView(RetrieveDestroyAPIView):
 
 
 class StepListView(ListCreateAPIView):
-    queryset = Step.objects.all().order_by('-updated')
+    queryset = Step.objects.exclude(type__in=StepChoices.SEQUENCE) \
+                           .order_by('-updated')
     serializer_class = StepSerializer
     pagination_class = ListPagination
     filter_backends = [SearchFilter, OrderingFilter]
@@ -99,9 +104,9 @@ class SubstepOrderView(ListAPIView):
 
         if from_index > to_index:  # Move up
             LinkedStep.objects.filter(super__uuid=uuid) \
-                             .filter(pos__lt=from_index) \
-                             .filter(pos__gte=to_index) \
-                             .update(pos=F('pos') + 1)
+                .filter(pos__lt=from_index) \
+                .filter(pos__gte=to_index) \
+                .update(pos=F('pos') + 1)
 
         linked_step.pos = to_index
         linked_step.save()

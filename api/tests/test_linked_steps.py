@@ -12,7 +12,7 @@ def test_create_linked_step(client, make_step):
     step = make_step()
 
     kwargs = {'uuid': super.uuid}
-    url = reverse('api:step-add', kwargs=kwargs)
+    url = reverse('api:step-link', kwargs=kwargs)
 
     payload = {'sub': step.uuid}
     response = client.post(url, payload)
@@ -28,7 +28,7 @@ def test_create_linked_step_auto_pos(client, step, make_linked_steps):
     linked_step = make_linked_steps(super=step, sub=1)[0]
 
     kwargs = {'uuid': step.uuid}
-    url = reverse('api:step-add', kwargs=kwargs)
+    url = reverse('api:step-link', kwargs=kwargs)
 
     payload = {'sub': linked_step.sub.uuid}
     response = client.post(url, payload)
@@ -44,7 +44,7 @@ def test_delete_linked_step(client, step, make_linked_steps):
     linked_step = make_linked_steps(super=step, sub=1)[0]
 
     kwargs = {'uuid': step.uuid}
-    url = reverse('api:step-delete', kwargs=kwargs)
+    url = reverse('api:linked-step-delete', kwargs=kwargs)
 
     payload = {'sub': linked_step.sub.uuid}
     response = client.delete(url, payload)
@@ -65,7 +65,7 @@ def test_delete_linked_step_updates_order(client, delete_index, step,
     linked_steps = make_linked_steps(super=step, sub=3)
 
     kwargs = {'uuid': step.uuid}
-    url = reverse('api:step-delete', kwargs=kwargs)
+    url = reverse('api:linked-step-delete', kwargs=kwargs)
 
     payload = {'sub': linked_steps[delete_index].sub.uuid}
     client.delete(url, payload)
@@ -90,7 +90,7 @@ def test_rearrange_linked_steps(client, order, expected, step,
     linked_steps = make_linked_steps(super=step, sub=3)
 
     kwargs = {'uuid': step.uuid}
-    url = reverse('api:step-order', kwargs=kwargs)
+    url = reverse('api:linked-step-order', kwargs=kwargs)
 
     payload = {'from_index': order[0], 'to_index': order[1]}
     response = client.post(url, payload)

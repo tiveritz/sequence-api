@@ -19,14 +19,30 @@ def test_get_step_by_uuid(client, step):
 
 
 @pytest.mark.django_db
+def test_get_step_list_fields(client, step):
+    url = reverse('api:step-list')
+
+    response = client.get(url)
+
+    expected_fields = ['url',
+                       'uuid',
+                       'created',
+                       'updated',
+                       'title',
+                       'type', ]
+    received_fields = response.data['results'][0].keys()
+
+    assert set(expected_fields) == set(received_fields)
+
+
+@pytest.mark.django_db
 def test_get_step_fields(client, step):
     kwargs = {'uuid': step.uuid}
     url = reverse('api:step', kwargs=kwargs)
 
     response = client.get(url)
 
-    expected_fields = ['url',
-                       'url_link_step',
+    expected_fields = ['url_link_step',
                        'url_order_linked_steps',
                        'url_delete_linked_step',
                        'uuid',

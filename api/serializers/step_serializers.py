@@ -12,14 +12,6 @@ from api.models import Step, LinkedStep
 
 class StepSerializer(ModelSerializer):
     url = HyperlinkedIdentityField(view_name='api:step', lookup_field='uuid')
-    url_link_step = HyperlinkedIdentityField(view_name='api:step-add',
-                                             lookup_field='uuid')
-    url_order_linked_steps = \
-        HyperlinkedIdentityField(view_name='api:step-order',
-                                 lookup_field='uuid')
-    url_delete_linked_step = \
-        HyperlinkedIdentityField(view_name='api:step-delete',
-                                 lookup_field='uuid')
 
     title = CharField(required=False)
     type = CharField(required=False)
@@ -43,6 +35,27 @@ class StepSerializer(ModelSerializer):
         instance.save()
 
         return instance
+
+
+class StepDetailSerializer(ModelSerializer):
+    url_link_step = HyperlinkedIdentityField(view_name='api:step-link',
+                                             lookup_field='uuid')
+    url_order_linked_steps = \
+        HyperlinkedIdentityField(view_name='api:linked-step-order',
+                                 lookup_field='uuid')
+    url_delete_linked_step = \
+        HyperlinkedIdentityField(view_name='api:linked-step-delete',
+                                 lookup_field='uuid')
+
+    title = CharField(read_only=True)
+    type = CharField(read_only=True)
+
+    class Meta:
+        model = Step
+        exclude = ['id']
+        read_only_fields = ('url_link_step', 'url_order_linked_steps',
+                            'url_delete_linked_step', 'uuid', 'created',
+                            'updated')
 
 
 class SubstepAddSerializer(ModelSerializer):
