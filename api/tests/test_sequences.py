@@ -32,7 +32,8 @@ def test_get_sequence_fields(client, sequence):
                        'updated',
                        'is_published',
                        'publish_date',
-                       'step', ]
+                       'step',
+                       'linked']
     received_fields = response.data.keys()
 
     assert set(expected_fields) == set(received_fields)
@@ -88,3 +89,30 @@ def test_delete_non_existing_sequence_raises_error(client):
     response = client.delete(url)
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.django_db
+def test_sequence_detail_shows_linked_steps(client, sequence,
+                                            make_linked_steps):
+    linked_step = make_linked_steps(super=sequence.step, sub=1)[0]
+
+    kwargs = {'uuid': sequence.uuid}
+    url = reverse('api:sequence', kwargs=kwargs)
+
+    response = client.get(url)
+
+    expected_fields = ['url_link_step',
+                       'url_linkable_steps',
+                       'url_order_linked_steps',
+                       'url_delete_linked_step',
+                       'uuid',
+                       'created',
+                       'updated',
+                       'title',
+                       'type',
+                       'linked']
+
+    received_fields = response.data['linked'][0].keys()
+
+    assert set(expected_fields) == set(received_fields)
+    assert response.data['linked'][0]['uuid'] == str(linked_step.sub.uuid)

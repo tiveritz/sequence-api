@@ -30,7 +30,7 @@ def test_get_step_list_fields(client, step):
                        'created',
                        'updated',
                        'title',
-                       'type', ]
+                       'type']
     received_fields = response.data['results'][0].keys()
 
     assert set(expected_fields) == set(received_fields)
@@ -44,13 +44,15 @@ def test_get_step_fields(client, step):
     response = client.get(url)
 
     expected_fields = ['url_link_step',
+                       'url_linkable_steps',
                        'url_order_linked_steps',
                        'url_delete_linked_step',
                        'uuid',
                        'created',
                        'updated',
                        'title',
-                       'type', ]
+                       'type',
+                       'linked']
     received_fields = response.data.keys()
 
     assert set(expected_fields) == set(received_fields)
@@ -139,3 +141,29 @@ def test_delete_step(client, step):
 
     with pytest.raises(Step.DoesNotExist):
         Step.objects.get(uuid=step.uuid)
+
+
+@pytest.mark.django_db
+def test_step_detail_shows_linked_steps(client, step, make_linked_steps):
+    linked_step = make_linked_steps(super=step, sub=1)[0]
+
+    kwargs = {'uuid': step.uuid}
+    url = reverse('api:step', kwargs=kwargs)
+
+    response = client.get(url)
+
+    expected_fields = ['url_link_step',
+                       'url_linkable_steps',
+                       'url_order_linked_steps',
+                       'url_delete_linked_step',
+                       'uuid',
+                       'created',
+                       'updated',
+                       'title',
+                       'type',
+                       'linked']
+
+    received_fields = response.data['linked'][0].keys()
+
+    assert set(expected_fields) == set(received_fields)
+    assert response.data['linked'][0]['uuid'] == str(linked_step.sub.uuid)

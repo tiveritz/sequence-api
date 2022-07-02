@@ -8,6 +8,7 @@ from rest_framework.serializers import (CharField,
 from api.base.choices import StepChoices
 from api.base.exceptions import NotAValidStepType
 from api.models import Step, LinkedStep
+from api.serializers.recursive_serializers import RecursiveSerializer
 
 
 class StepSerializer(ModelSerializer):
@@ -38,6 +39,9 @@ class StepSerializer(ModelSerializer):
 
 
 class StepDetailSerializer(ModelSerializer):
+    url_linkable_steps = \
+        HyperlinkedIdentityField(view_name='api:step-linkable',
+                                 lookup_field='uuid')
     url_link_step = HyperlinkedIdentityField(view_name='api:step-link',
                                              lookup_field='uuid')
     url_order_linked_steps = \
@@ -49,13 +53,14 @@ class StepDetailSerializer(ModelSerializer):
 
     title = CharField(read_only=True)
     type = CharField(read_only=True)
+    linked = RecursiveSerializer(many=True)
 
     class Meta:
         model = Step
         exclude = ['id']
         read_only_fields = ('url_link_step', 'url_order_linked_steps',
                             'url_delete_linked_step', 'uuid', 'created',
-                            'updated')
+                            'updated', 'linked', 'url_linkable_steps')
 
 
 class LinkStepSerializer(ModelSerializer):

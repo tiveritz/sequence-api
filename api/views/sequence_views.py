@@ -1,18 +1,21 @@
+from core.pagination import ListPagination
 
 from rest_framework import status
+from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
 from rest_framework.response import Response
-from core.pagination import ListPagination
 
 from api.models import Sequence
 
-from api.serializers.sequence_serializers import SequenceSerializer
+from api.serializers.sequence_serializers import (SequenceDetailSerializer,
+                                                  SequenceSerializer)
 
 
-class SequenceView(RetrieveDestroyAPIView):
+class SequenceDetailView(RetrieveDestroyAPIView):
     def get(self, request, uuid):
         sequence = Sequence.objects.get(uuid=uuid)
-        serializer = SequenceSerializer(sequence, context={'request': request})
+        serializer = SequenceDetailSerializer(sequence,
+                                              context={'request': request})
         return Response(serializer.data)
 
     def delete(self, request, uuid):
@@ -27,6 +30,9 @@ class SequenceListView(ListCreateAPIView):
     queryset = Sequence.objects.all().order_by('-updated')
     serializer_class = SequenceSerializer
     pagination_class = ListPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['step__title']
+    ordering_fields = ['step__title', 'created', 'updated']
 
     def post(self, request, format=None):
         serializer = SequenceSerializer(data=request.data,

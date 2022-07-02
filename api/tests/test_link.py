@@ -140,3 +140,86 @@ def test_link_step_updates_super_step_type(client, make_step,
 
     step.refresh_from_db()
     assert step.type == StepChoices.SUPER
+
+
+@pytest.mark.django_db
+def test_list_linkable_steps(client, step, make_step):
+    make_step()  # linkable step
+
+    kwargs = {'uuid': step.uuid}
+    url = reverse('api:step-linkable', kwargs=kwargs)
+
+    response = client.get(url)
+
+    assert response.status_code == status.HTTP_200_OK
+
+    expected_fields = ['url',
+                       'uuid',
+                       'created',
+                       'updated',
+                       'title',
+                       'type']
+    received_fields = response.data['results'][0].keys()
+
+    assert set(expected_fields) == set(received_fields)
+
+
+@pytest.mark.django_db
+def test_list_linkable_steps_excludes_children_and_self(client,
+                                                        step,
+                                                        make_step,
+                                                        make_linked_steps):
+    make_linked_steps(super=step, sub=1)[0]
+    linkable_step = make_step()
+
+    kwargs = {'uuid': step.uuid}
+    url = reverse('api:step-linkable', kwargs=kwargs)
+
+    response = client.get(url)
+    assert len(response.data['results']) == 1
+    assert response.data['results'][0]['uuid'] == str(linkable_step.uuid)
+
+
+@pytest.mark.django_db
+def test_list_linkable_steps_excludes_direct_parent(
+        client, make_step, make_linked_steps):
+    # parent
+    # L child0
+    # L child1
+    #   L can not link parent
+
+    parent = make_step()
+    linked_step = make_linked_steps(super=parent, sub=2)
+    child0 = linked_step[0].sub
+    child1 = linked_step[1].sub
+
+    kwargs = {'uuid': child1.uuid}
+    url = reverse('api:step-linkable', kwargs=kwargs)
+
+    response = client.get(url)
+    assert len(response.data['results']) == 1
+    assert response.data['results'][0]['uuid'] == str(child0.uuid)
+
+
+@pytest.mark.django_db
+def test_list_linkable_steps_excludes_parents_recursively(
+        client, make_step, make_linked_steps):
+    # parent0
+    # L parent1
+    #   L child0
+    #   L child1
+    #     L can not link parent
+
+    parent0 = make_step()
+    linked_step0 = make_linked_steps(super=parent0, sub=1)
+    linked_step1 = make_linked_steps(super=linked_step0[0].sub, sub=2)
+
+    child0 = linked_step1[0].sub
+    child1 = linked_step1[1].sub
+
+    kwargs = {'uuid': child1.uuid}
+    url = reverse('api:step-linkable', kwargs=kwargs)
+
+    response = client.get(url)
+    assert len(response.data['results']) == 1
+    assert response.data['results'][0]['uuid'] == str(child0.uuid)

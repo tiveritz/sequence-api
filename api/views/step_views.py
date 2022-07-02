@@ -61,7 +61,16 @@ class StepListView(ListCreateAPIView):
 
 
 class StepLinkableListView(ListAPIView):
-    pass
+    serializer_class = StepSerializer
+
+    def get_queryset(self):
+        super = Step.objects.get(uuid=self.kwargs['uuid'])
+        parent_pks = super.get_parent_pks()
+        linked = super.linked
+        children = [li.pk for li in linked]
+        excluded_pks = children + [super.pk] + parent_pks
+
+        return Step.objects.exclude(pk__in=excluded_pks).order_by('-updated')
 
 
 class LinkStepView(CreateAPIView):

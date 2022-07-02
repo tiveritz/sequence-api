@@ -20,6 +20,25 @@ class Step(models.Model):
     def __str__(self):
         return f'{self.uuid}'
 
+    @property
+    def linked(self):
+        linked_steps = LinkedStep.objects.filter(super=self).order_by('pos')
+        return [linked_step.sub for linked_step in linked_steps]
+
+    def get_parent_pks(self):
+        try:
+            linked_steps = LinkedStep.objects.filter(sub=self)
+        except LinkedStep.DoesNotExist:
+            return []
+
+        parents = [li.super for li in linked_steps]
+
+        parent_pks = []
+        for parent in parents:
+            parent_pks = parent.get_parent_pks()
+
+        return [parent.pk for parent in parents] + parent_pks
+
     def update_type(self, type):
         self.type = type
         self.save()
