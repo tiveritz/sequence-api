@@ -1,4 +1,5 @@
-from rest_framework.serializers import (ModelSerializer,
+from rest_framework.serializers import (CharField,
+                                        ModelSerializer,
                                         HyperlinkedIdentityField,
                                         UUIDField)
 from api.models import Sequence, Step
@@ -10,6 +11,7 @@ class SequenceDetailSerializer(ModelSerializer):
     url = HyperlinkedIdentityField(view_name='api:sequence',
                                    lookup_field='uuid',)
     step = UUIDField(read_only=True, source='step.uuid')
+    title = CharField(read_only=True, source='step.title')
     linked = StepDetailSerializer(many=True,
                                   read_only=True,
                                   source='step.linked')
@@ -17,31 +19,17 @@ class SequenceDetailSerializer(ModelSerializer):
     class Meta:
         model = Sequence
         exclude = ['id']
-        read_only_fields = ('url',
-                            'uuid',
-                            'created',
-                            'updated',
-                            'is_published',
-                            'publish_date',
-                            'step',
-                            'linked')
 
 
 class SequenceSerializer(ModelSerializer):
     url = HyperlinkedIdentityField(view_name='api:sequence',
                                    lookup_field='uuid',)
     step = UUIDField(read_only=True, source='step.uuid')
+    title = CharField(read_only=True, source='step.title')
 
     class Meta:
         model = Sequence
         exclude = ['id']
-        read_only_fields = ('url',
-                            'uuid',
-                            'created',
-                            'updated',
-                            'is_published',
-                            'publish_date',
-                            'step')
 
     def create(self, validated_data):
         step = Step.objects.create(type=StepChoices.SEQUENCE)

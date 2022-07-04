@@ -4,7 +4,7 @@ cryptography==37.0.2
 django-filter==22.1
 django-multiselectfield==0.1.12
 django-storages==1.12.3
-Django==4.0.5
+Django==4.0.6
 djangorestframework==3.13.1
 Pillow==9.2.0
 psycopg2-binary==2.9.3

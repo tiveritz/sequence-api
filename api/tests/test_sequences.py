@@ -33,6 +33,7 @@ def test_get_sequence_fields(client, sequence):
                        'is_published',
                        'publish_date',
                        'step',
+                       'title',
                        'linked']
     received_fields = response.data.keys()
 
