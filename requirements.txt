@@ -1,6 +1,6 @@
 # BASE
-boto3==1.24.22
-cryptography==37.0.2
+boto3==1.24.24
+cryptography==37.0.4
 django-filter==22.1
 django-multiselectfield==0.1.12
 django-storages==1.12.3

@@ -53,7 +53,7 @@ class Sequence(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     is_published = models.BooleanField(default=False)
-    publish_date = models.DateTimeField(null=True)
+    published = models.DateTimeField(null=True)
     step = models.OneToOneField(Step,
                                 blank=False,
                                 null=False,

@@ -31,7 +31,7 @@ def test_get_sequence_fields(client, sequence):
                        'created',
                        'updated',
                        'is_published',
-                       'publish_date',
+                       'published',
                        'step',
                        'title',
                        'linked']
