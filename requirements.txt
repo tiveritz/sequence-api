@@ -1,5 +1,5 @@
 # BASE
-boto3==1.24.24
+boto3==1.24.26
 cryptography==37.0.4
 django-filter==22.1
 django-multiselectfield==0.1.12

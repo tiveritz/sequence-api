@@ -25,12 +25,13 @@ class SequenceSerializer(ModelSerializer):
     url = HyperlinkedIdentityField(view_name='api:sequence',
                                    lookup_field='uuid',)
     step = UUIDField(read_only=True, source='step.uuid')
-    title = CharField(read_only=True, source='step.title')
+    title = CharField(required=True, source='step.title')
 
     class Meta:
         model = Sequence
         exclude = ['id']
 
     def create(self, validated_data):
-        step = Step.objects.create(type=StepChoices.SEQUENCE)
+        step = Step.objects.create(type=StepChoices.SEQUENCE,
+                                   title=validated_data['step']['title'])
         return Sequence.objects.create(step=step)

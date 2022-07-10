@@ -5,6 +5,7 @@ from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
 from rest_framework.response import Response
 
+from api.filters import SequenceSearchFilter, SequenceOrderingFilter
 from api.models import Sequence
 
 from api.serializers.sequence_serializers import (SequenceDetailSerializer,
@@ -30,9 +31,9 @@ class SequenceListView(ListCreateAPIView):
     queryset = Sequence.objects.all().order_by('-updated')
     serializer_class = SequenceSerializer
     pagination_class = ListPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['step__title']
-    ordering_fields = ['step__title', 'created', 'updated']
+    filter_backends = [SequenceSearchFilter, SequenceOrderingFilter]
+    search_fields = ['title']
+    ordering_fields = ['title', 'updated', 'created', 'published']
 
     def post(self, request, format=None):
         serializer = SequenceSerializer(data=request.data,

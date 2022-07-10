@@ -1,17 +1,18 @@
 from django.conf import settings
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import (Sequence,
-                      Step,
-                      LinkedStep,
-                      Explanation,
-                      Image)
+from api.base.choices import StepChoices
+from api.models import (Sequence,
+                        Step,
+                        LinkedStep,
+                        Explanation,
+                        Image)
 
 
 class StatisticView(APIView):
     def get(self, request):
         sequence_count = Sequence.objects.count()
-        steps_count = Step.objects.count()
+        steps_count = Step.objects.exclude(type=StepChoices.SEQUENCE).count()
         images_count = Image.objects.count()
 
         linked_step_uuids = LinkedStep.objects.values_list(

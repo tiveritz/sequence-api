@@ -62,6 +62,10 @@ class StepListView(ListCreateAPIView):
 
 class StepLinkableListView(ListAPIView):
     serializer_class = StepSerializer
+    pagination_class = ListPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['title']
+    ordering_fields = ['title', 'created', 'updated']
 
     def get_queryset(self):
         super = Step.objects.get(uuid=self.kwargs['uuid'])

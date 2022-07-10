@@ -42,17 +42,23 @@ def test_get_sequence_fields(client, sequence):
 
 
 @pytest.mark.django_db
-def test_create_sequence(client):
+def test_create_sequence(faker, client):
     url = reverse('api:sequence-list')
-    response = client.post(url)
+
+    title = faker.sentence()
+    payload = {'title': title}
+    response = client.post(url, payload)
 
     assert response.status_code == status.HTTP_201_CREATED
+    assert response.data['title'] == title
 
 
 @pytest.mark.django_db
-def test_add_sequence_creates_step(client):
+def test_add_sequence_creates_step(faker, client):
     url = reverse('api:sequence-list')
-    response = client.post(url)
+
+    payload = {'title': faker.sentence()}
+    response = client.post(url, payload)
 
     assert response.data['uuid'] is not None
 
@@ -62,10 +68,12 @@ def test_add_sequence_creates_step(client):
 
 
 @pytest.mark.django_db
-def test_create_sequence_ignores_uuid(client):
+def test_create_sequence_ignores_uuid(faker, client):
     url = reverse('api:sequence-list')
     sequence_uuid = str(uuid.uuid4())
-    payload = {'uuid': sequence_uuid}
+
+    payload = {'title': faker.sentence(),
+               'uuid': sequence_uuid}
 
     response = client.post(url, payload)
     assert response.data['uuid'] != sequence_uuid
