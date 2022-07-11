@@ -4,32 +4,36 @@ from rest_framework.serializers import (CharField,
                                         UUIDField)
 from api.models import Sequence, Step
 from api.base.choices import StepChoices
-from api.serializers.step_serializers import StepDetailSerializer
+from api.serializers.step_serializers import StepSerializer
 
 
-class SequenceDetailSerializer(ModelSerializer):
+class SequenceBaseSerializer(ModelSerializer):
     url = HyperlinkedIdentityField(view_name='api:sequence',
-                                   lookup_field='uuid',)
-    step = UUIDField(read_only=True, source='step.uuid')
-    title = CharField(read_only=True, source='step.title')
-    linked = StepDetailSerializer(many=True,
-                                  read_only=True,
-                                  source='step.linked')
+                                   lookup_field='uuid')
+    uuid = UUIDField(read_only=True, source='step.uuid')
+    title = CharField(source='step.title')
+
+
+class SequenceSerializer(SequenceBaseSerializer):
+    linked = StepSerializer(many=True,
+                            read_only=True,
+                            source='step.linked')
 
     class Meta:
         model = Sequence
-        exclude = ['id']
+        exclude = ['id', 'step']
+
+    def update(self, instance, validated_data):
+        instance.step.title = validated_data['step']['title']
+        instance.step.save()
+
+        return instance
 
 
-class SequenceSerializer(ModelSerializer):
-    url = HyperlinkedIdentityField(view_name='api:sequence',
-                                   lookup_field='uuid',)
-    step = UUIDField(read_only=True, source='step.uuid')
-    title = CharField(required=True, source='step.title')
-
+class SequencesSerializer(SequenceBaseSerializer):
     class Meta:
         model = Sequence
-        exclude = ['id']
+        exclude = ['id', 'step']
 
     def create(self, validated_data):
         step = Step.objects.create(type=StepChoices.SEQUENCE,

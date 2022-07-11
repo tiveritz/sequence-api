@@ -120,15 +120,16 @@ def test_create_step_ignores_uuid(client):
 
 
 @pytest.mark.django_db
-def test_update_step(client, step):
+def test_update_step(faker, client, step):
     kwargs = {'uuid': step.uuid}
     url = reverse('api:step', kwargs=kwargs)
 
-    payload = {'title': 'new_title'}
+    title = faker.sentence()
+    payload = {'title': title}
     response = client.patch(url, payload)
 
     assert response.data['uuid'] == str(step.uuid)
-    assert response.data['title'] == 'new_title'
+    assert response.data['title'] == title
 
 
 @pytest.mark.django_db

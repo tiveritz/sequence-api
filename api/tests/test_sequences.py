@@ -32,13 +32,13 @@ def test_get_sequence_fields(client, sequence):
                        'updated',
                        'is_published',
                        'published',
-                       'step',
                        'title',
                        'linked']
     received_fields = response.data.keys()
 
     assert set(expected_fields) == set(received_fields)
-    assert response.data['step'] == str(sequence.step.uuid)
+    assert response.data['uuid'] == str(sequence.uuid)
+    assert response.data['uuid'] == str(sequence.step.uuid)
 
 
 @pytest.mark.django_db
@@ -62,7 +62,7 @@ def test_add_sequence_creates_step(faker, client):
 
     assert response.data['uuid'] is not None
 
-    step_uuid = response.data['step']
+    step_uuid = response.data['uuid']
     step = Step.objects.get(uuid=step_uuid)
     assert step.type == StepChoices.SEQUENCE
 
@@ -80,6 +80,19 @@ def test_create_sequence_ignores_uuid(faker, client):
 
 
 @pytest.mark.django_db
+def test_update_sequence(faker, client, sequence):
+    kwargs = {'uuid': sequence.uuid}
+    url = reverse('api:sequence', kwargs=kwargs)
+
+    title = faker.sentence()
+    payload = {'title': title}
+    response = client.patch(url, payload)
+
+    assert response.data['uuid'] == str(sequence.uuid)
+    assert response.data['title'] == title
+
+
+@pytest.mark.django_db
 def test_delete_sequence(client, sequence):
     kwargs = {'uuid': sequence.uuid}
     url = reverse('api:sequence', kwargs=kwargs)
@@ -89,15 +102,6 @@ def test_delete_sequence(client, sequence):
 
     with pytest.raises(Step.DoesNotExist):
         Step.objects.get(uuid=sequence.uuid)
-
-
-@pytest.mark.django_db
-def test_delete_non_existing_sequence_raises_error(client):
-    kwargs = {'uuid': uuid.uuid4()}
-    url = reverse('api:sequence', kwargs=kwargs)
-    response = client.delete(url)
-
-    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.django_db

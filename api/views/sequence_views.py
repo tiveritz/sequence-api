@@ -1,43 +1,53 @@
 from core.pagination import ListPagination
 
 from rest_framework import status
-from rest_framework.filters import SearchFilter, OrderingFilter
 from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
 from rest_framework.response import Response
 
 from api.filters import SequenceSearchFilter, SequenceOrderingFilter
-from api.models import Sequence
+from api.models import Sequence, Step
 
-from api.serializers.sequence_serializers import (SequenceDetailSerializer,
-                                                  SequenceSerializer)
+from api.serializers.sequence_serializers import (SequenceSerializer,
+                                                  SequencesSerializer)
 
 
-class SequenceDetailView(RetrieveDestroyAPIView):
+class SequenceView(RetrieveDestroyAPIView):
     def get(self, request, uuid):
-        sequence = Sequence.objects.get(uuid=uuid)
-        serializer = SequenceDetailSerializer(sequence,
-                                              context={'request': request})
+        sequence = Sequence.objects.get(step__uuid=uuid)
+        serializer = SequenceSerializer(sequence,
+                                        context={'request': request})
         return Response(serializer.data)
 
+    def patch(self, request, uuid):
+        sequence = Sequence.objects.get(step__uuid=uuid)
+
+        context = {'request': request}
+        serializer = SequenceSerializer(sequence,
+                                        data=request.data,
+                                        context=context,
+                                        partial=True)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data)
+
     def delete(self, request, uuid):
-        try:
-            Sequence.objects.get(uuid=uuid).delete()
-        except Sequence.DoesNotExist:
-            return Response(status=status.HTTP_404_NOT_FOUND)
+        Sequence.objects.get(step__uuid=uuid).delete()
+        Step.objects.get(uuid=uuid).delete()
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SequenceListView(ListCreateAPIView):
     queryset = Sequence.objects.all().order_by('-updated')
-    serializer_class = SequenceSerializer
+    serializer_class = SequencesSerializer
     pagination_class = ListPagination
     filter_backends = [SequenceSearchFilter, SequenceOrderingFilter]
     search_fields = ['title']
     ordering_fields = ['title', 'updated', 'created', 'published']
 
     def post(self, request, format=None):
-        serializer = SequenceSerializer(data=request.data,
-                                        context={'request': request})
+        serializer = SequencesSerializer(data=request.data,
+                                         context={'request': request})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)

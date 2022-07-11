@@ -12,33 +12,6 @@ from api.serializers.recursive_serializers import RecursiveSerializer
 
 
 class StepSerializer(ModelSerializer):
-    url = HyperlinkedIdentityField(view_name='api:step', lookup_field='uuid')
-
-    title = CharField(required=False)
-    type = CharField(required=False)
-
-    class Meta:
-        model = Step
-        exclude = ['id']
-        read_only_fields = ('uuid', 'created', 'updated')
-
-    def validate_type(self, value):
-        if value not in StepChoices:
-            raise NotAValidStepType
-        return value
-
-    def create(self, validated_data):
-        return Step.objects.create(**validated_data)
-
-    def update(self, instance, validated_data):
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-
-        return instance
-
-
-class StepDetailSerializer(ModelSerializer):
     url_linkable_steps = \
         HyperlinkedIdentityField(view_name='api:step-linkable',
                                  lookup_field='uuid')
@@ -62,6 +35,33 @@ class StepDetailSerializer(ModelSerializer):
                             'url_delete_linked_step', 'uuid', 'created',
                             'updated', 'linked', 'url_linkable_steps')
 
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
+
+
+class StepsSerializer(ModelSerializer):
+    url = HyperlinkedIdentityField(view_name='api:step', lookup_field='uuid')
+
+    title = CharField(required=False)
+    type = CharField(required=False)
+
+    class Meta:
+        model = Step
+        exclude = ['id']
+        read_only_fields = ('uuid', 'created', 'updated')
+
+    def validate_type(self, value):
+        if value not in StepChoices:
+            raise NotAValidStepType
+        return value
+
+    def create(self, validated_data):
+        return Step.objects.create(**validated_data)
+
 
 class LinkStepSerializer(ModelSerializer):
     super = UUIDField(read_only=True)
@@ -83,5 +83,7 @@ class LinkStepSerializer(ModelSerializer):
                                                 sub=sub,
                                                 pos=new_pos)
 
-        super.update_type(StepChoices.SUPER)
+        if super.type != StepChoices.SEQUENCE:
+            super.update_type(StepChoices.SUPER)
+
         return linked_step

@@ -4,8 +4,8 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from api.views.api_root import APIRoot
 from api.views.general_views import StatisticView
-from api.views.sequence_views import SequenceListView, SequenceDetailView
-from api.views.step_views import (StepListView,
+from api.views.sequence_views import SequenceListView, SequenceView
+from api.views.step_views import (StepsView,
                                   StepView,
                                   StepLinkableListView,
                                   LinkStepView,
@@ -24,11 +24,11 @@ urlpatterns = [
          SequenceListView.as_view(),
          name='sequence-list'),
     path('sequences/<uuid:uuid>/',
-         SequenceDetailView.as_view(),
+         SequenceView.as_view(),
          name='sequence'),
 
     path('steps/',
-         StepListView.as_view(),
+         StepsView.as_view(),
          name='step-list'),
     path('steps/<uuid:uuid>/',
          StepView.as_view(),
@@ -36,7 +36,7 @@ urlpatterns = [
     path('steps/<uuid:uuid>/linkable/',
          StepLinkableListView.as_view(),
          name='step-linkable'),
-    path('steps/<uuid:uuid>/steps/add/',
+    path('steps/<uuid:uuid>/steps/link/',
          LinkStepView.as_view(),
          name='step-link'),
     path('steps/<uuid:uuid>/steps/order/',

@@ -13,26 +13,26 @@ from rest_framework.response import Response
 from api.base.choices import StepChoices
 from api.models import Step, LinkedStep
 from api.serializers.step_serializers import (LinkStepSerializer,
-                                              StepDetailSerializer,
-                                              StepSerializer)
+                                              StepSerializer,
+                                              StepsSerializer)
 
 
 class StepView(RetrieveDestroyAPIView):
-    serializer_class = StepDetailSerializer
+    serializer_class = StepSerializer
 
     def get(self, request, uuid):
         step = Step.objects.get(uuid=uuid)
-        serializer = StepDetailSerializer(step, context={'request': request})
+        serializer = StepSerializer(step, context={'request': request})
         return Response(serializer.data)
 
     def patch(self, request, uuid):
         step = Step.objects.get(uuid=uuid)
 
         context = {'request': request}
-        serializer = StepSerializer(step,
-                                    data=request.data,
-                                    context=context,
-                                    partial=True)
+        serializer = StepsSerializer(step,
+                                     data=request.data,
+                                     context=context,
+                                     partial=True)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data)
@@ -42,18 +42,18 @@ class StepView(RetrieveDestroyAPIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class StepListView(ListCreateAPIView):
+class StepsView(ListCreateAPIView):
     queryset = Step.objects.exclude(type=StepChoices.SEQUENCE) \
                            .order_by('-updated')
-    serializer_class = StepSerializer
+    serializer_class = StepsSerializer
     pagination_class = ListPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title']
     ordering_fields = ['title', 'created', 'updated']
 
     def post(self, request):
-        serializer = StepSerializer(data=request.data,
-                                    context={'request': request})
+        serializer = StepsSerializer(data=request.data,
+                                     context={'request': request})
         if serializer.is_valid(raise_exception=True):
             serializer.save()
 
@@ -61,7 +61,7 @@ class StepListView(ListCreateAPIView):
 
 
 class StepLinkableListView(ListAPIView):
-    serializer_class = StepSerializer
+    serializer_class = StepsSerializer
     pagination_class = ListPagination
     filter_backends = [SearchFilter, OrderingFilter]
     search_fields = ['title']
@@ -74,7 +74,9 @@ class StepLinkableListView(ListAPIView):
         children = [li.pk for li in linked]
         excluded_pks = children + [super.pk] + parent_pks
 
-        return Step.objects.exclude(pk__in=excluded_pks).order_by('-updated')
+        return Step.objects.exclude(pk__in=excluded_pks) \
+                           .exclude(type=StepChoices.SEQUENCE) \
+                           .order_by('-updated')
 
 
 class LinkStepView(CreateAPIView):

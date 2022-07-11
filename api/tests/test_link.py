@@ -181,6 +181,21 @@ def test_list_linkable_steps_excludes_children_and_self(client,
 
 
 @pytest.mark.django_db
+def test_list_linkable_steps_excludes_sequence_steps(client,
+                                                     step,
+                                                     make_step):
+    linkable_step = make_step()
+    make_step(type=StepChoices.SEQUENCE)
+
+    kwargs = {'uuid': step.uuid}
+    url = reverse('api:step-linkable', kwargs=kwargs)
+
+    response = client.get(url)
+    assert len(response.data['results']) == 1
+    assert response.data['results'][0]['uuid'] == str(linkable_step.uuid)
+
+
+@pytest.mark.django_db
 def test_list_linkable_steps_excludes_direct_parent(
         client, make_step, make_linked_steps):
     # parent
@@ -223,3 +238,22 @@ def test_list_linkable_steps_excludes_parents_recursively(
     response = client.get(url)
     assert len(response.data['results']) == 1
     assert response.data['results'][0]['uuid'] == str(child0.uuid)
+
+
+@pytest.mark.django_db
+def test_link_step_to_sequence_does_not_change_type(client,
+                                                    sequence,
+                                                    make_step):
+    super = sequence.step
+    step = make_step()
+
+    kwargs = {'uuid': super.uuid}
+    url = reverse('api:step-link', kwargs=kwargs)
+
+    payload = {'sub': step.uuid}
+    response = client.post(url, payload)
+
+    assert response.status_code == status.HTTP_201_CREATED
+
+    sequence.refresh_from_db()
+    assert sequence.step.type == StepChoices.SEQUENCE
