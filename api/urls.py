@@ -5,13 +5,14 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from api.views.api_root import APIRoot
 from api.views.general_views import StatisticView
 from api.views.sequence_views import SequenceListView, SequenceView
-from api.views.step_views import (StepsView,
-                                  StepView,
-                                  StepLinkableListView,
-                                  LinkStepView,
-                                  LinkedStepDeleteView,
-                                  LinkedStepOrderView,
-                                  StepUsageView)
+from api.views.step_views import (
+    StepsView,
+    StepView,
+    StepLinkableListView,
+    LinkStepView,
+    LinkedStepDeleteView,
+    LinkedStepOrderView,
+    StepUsageView)
 
 
 app_name = 'api'
