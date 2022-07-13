@@ -1,20 +1,23 @@
-from core.pagination import ListPagination
 from django.db.models import F, Max
 
+
 from rest_framework import status
-from rest_framework.generics import (CreateAPIView,
-                                     DestroyAPIView,
-                                     ListAPIView,
-                                     ListCreateAPIView,
-                                     RetrieveDestroyAPIView)
 from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.generics import (
+    CreateAPIView,
+    DestroyAPIView,
+    ListAPIView,
+    ListCreateAPIView,
+    RetrieveDestroyAPIView)
 from rest_framework.response import Response
 
+from core.pagination import ListPagination
 from api.base.choices import StepChoices
-from api.models import Step, LinkedStep
-from api.serializers.step_serializers import (LinkStepSerializer,
-                                              StepSerializer,
-                                              StepsSerializer)
+from api.models.step import Step, LinkedStep
+from api.serializers.step_serializers import (
+    LinkStepSerializer,
+    StepSerializer,
+    StepsSerializer)
 
 
 class StepView(RetrieveDestroyAPIView):

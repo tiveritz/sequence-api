@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import SequenceGuide, SequenceGuideStep
+from api.models.step import SequenceGuide, SequenceGuideStep
 
 
 class SequenceGuideSerializer(serializers.ModelSerializer):

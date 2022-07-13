@@ -2,7 +2,8 @@ import pytest
 
 from rest_framework.test import APIClient
 
-from api.models import Sequence, Step, LinkedStep
+from api.models.step import Step, LinkedStep
+from api.models.sequence import Sequence
 from api.base.choices import StepChoices
 
 

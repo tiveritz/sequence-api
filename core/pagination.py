@@ -1,8 +1,9 @@
-from rest_framework.pagination import PageNumberPagination
-from django.core.paginator import EmptyPage
-from rest_framework.response import Response
 from math import ceil
+
 from django.conf import settings
+from django.core.paginator import EmptyPage
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 
 
 class ListPagination(PageNumberPagination):

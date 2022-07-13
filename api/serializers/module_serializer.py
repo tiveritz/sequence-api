@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from ..models import Explanation, Image
-from .explanation_serializers import ExplanationDetailSerializer
-from .media_serializers import ImageSerializer
+from api.models.step import Explanation, Image
+from api.serializers.explanation_serializers import ExplanationDetailSerializer
+from api.serializers.media_serializers import ImageSerializer
 
 
 class ModuleListSerializer(serializers.Serializer):

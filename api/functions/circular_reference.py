@@ -1,4 +1,4 @@
-from ..models import LinkedStep
+from api.models.step import LinkedStep
 
 
 def get_sub_step_tree(super):

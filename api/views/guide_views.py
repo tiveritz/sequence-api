@@ -3,9 +3,10 @@ from rest_framework.response import Response
 from rest_framework import status
 import re
 
-from ..models import (SequenceGuide,
-                      SequenceGuideStep,
-                      Image)
+from api.models.step import (
+    SequenceGuide,
+    SequenceGuideStep,
+    Image)
 
 from ..serializers.guide_serializers import (SequenceGuideSerializer,
                                              StepGuideSerializer,)

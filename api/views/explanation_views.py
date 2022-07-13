@@ -1,9 +1,10 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from ..models import Explanation
-from ..serializers.explanation_serializers import (ExplanationSerializer,
-                                                   ExplanationDetailSerializer)
+from api.models.step import Explanation
+from api.serializers.explanation_serializers import (
+    ExplanationSerializer,
+    ExplanationDetailSerializer)
 
 
 class ExplanationView(APIView):

@@ -1,13 +1,14 @@
 from django.db.models import Max
-from rest_framework.serializers import (CharField,
-                                        HyperlinkedIdentityField,
-                                        IntegerField,
-                                        ModelSerializer,
-                                        UUIDField)
+from rest_framework.serializers import (
+    CharField,
+    HyperlinkedIdentityField,
+    IntegerField,
+    ModelSerializer,
+    UUIDField)
 
 from api.base.choices import StepChoices
 from api.base.exceptions import NotAValidStepType
-from api.models import Step, LinkedStep
+from api.models.step import Step, LinkedStep
 from api.serializers.recursive_serializers import RecursiveSerializer
 
 

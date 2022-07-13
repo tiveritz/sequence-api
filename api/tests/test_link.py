@@ -4,7 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.base.choices import StepChoices
-from api.models import LinkedStep
+from api.models.step import LinkedStep
 
 
 @pytest.mark.django_db

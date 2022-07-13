@@ -8,9 +8,9 @@ from rest_framework.response import Response
 from ..functions.custom_renderers import JPEGRenderer, PNGRenderer
 from django.conf import settings
 
-from ..models import Image
-from ..serializers.media_serializers import (ImageSerializer,
-                                             ImageDetailSerializer)
+from api.models.step import Image
+from api.serializers.media_serializers import (ImageSerializer,
+                                               ImageDetailSerializer)
 
 
 class ImageView(APIView):

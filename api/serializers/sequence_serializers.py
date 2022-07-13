@@ -1,9 +1,12 @@
-from rest_framework.serializers import (CharField,
-                                        ModelSerializer,
-                                        HyperlinkedIdentityField,
-                                        UUIDField)
-from api.models import Sequence, Step
+from rest_framework.serializers import (
+    CharField,
+    ModelSerializer,
+    HyperlinkedIdentityField,
+    UUIDField)
+
 from api.base.choices import StepChoices
+from api.models.sequence import Sequence
+from api.models.step import Step
 from api.serializers.step_serializers import StepSerializer
 
 

@@ -1,14 +1,13 @@
-from core.pagination import ListPagination
-
 from rest_framework import status
 from rest_framework.generics import ListCreateAPIView, RetrieveDestroyAPIView
 from rest_framework.response import Response
 
 from api.filters import SequenceSearchFilter, SequenceOrderingFilter
-from api.models import Sequence, Step
-
+from api.models.sequence import Sequence
+from api.models.step import Step
 from api.serializers.sequence_serializers import (SequenceSerializer,
                                                   SequencesSerializer)
+from core.pagination import ListPagination
 
 
 class SequenceView(RetrieveDestroyAPIView):

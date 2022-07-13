@@ -6,7 +6,7 @@ from django.urls import reverse
 from rest_framework import status
 
 from api.base.choices import StepChoices
-from api.models import Step
+from api.models.step import Step
 
 
 @pytest.mark.django_db

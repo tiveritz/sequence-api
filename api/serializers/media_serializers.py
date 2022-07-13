@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from ..models import Image
+from api.models.step import Image
 
 
 class ImageSerializer(serializers.ModelSerializer):
