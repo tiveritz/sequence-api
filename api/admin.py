@@ -1,6 +1,6 @@
 from django.contrib import admin
-from api.models.step import (LinkedStep,
-                             Step)
+
+from api.models.step import LinkedStep, Step
 from api.models.sequence import Sequence
 
 

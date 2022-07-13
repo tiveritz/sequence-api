@@ -1,7 +1,8 @@
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from api.models.step import Explanation
+from rest_framework.views import APIView
+
+from api.models.content import Explanation
 from api.serializers.explanation_serializers import (
     ExplanationSerializer,
     ExplanationDetailSerializer)

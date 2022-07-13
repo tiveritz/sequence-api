@@ -1,15 +1,14 @@
+import re
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-import re
 
-from api.models.step import (
-    SequenceGuide,
-    SequenceGuideStep,
-    Image)
-
-from ..serializers.guide_serializers import (SequenceGuideSerializer,
-                                             StepGuideSerializer,)
+from api.models.content import Image
+from api.models.sequence import SequenceGuide, SequenceGuideStep
+from api.serializers.guide_serializers import (
+    SequenceGuideSerializer,
+    StepGuideSerializer)
 
 
 class SequenceGuideListView(APIView):

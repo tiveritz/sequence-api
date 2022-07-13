@@ -1,13 +1,14 @@
 from django.conf import settings
-from rest_framework.views import APIView
+
 from rest_framework.response import Response
+from rest_framework.views import APIView
+
 from api.base.choices import StepChoices
+from api.models.content import Explanation, Image
 from api.models.sequence import Sequence
 from api.models.step import (
     Step,
-    LinkedStep,
-    Explanation,
-    Image)
+    LinkedStep)
 
 
 class StatisticView(APIView):

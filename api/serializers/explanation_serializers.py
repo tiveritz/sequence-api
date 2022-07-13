@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from api.models.step import Explanation
+from api.models.content import Explanation
 
 
 class ExplanationSerializer(serializers.ModelSerializer):
