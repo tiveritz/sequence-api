@@ -5,12 +5,15 @@ from rest_framework.response import Response
 from api.filters import SequenceSearchFilter, SequenceOrderingFilter
 from api.models.sequence import Sequence
 from api.models.step import Step
-from api.serializers.sequence_serializers import (SequenceSerializer,
-                                                  SequencesSerializer)
+from api.serializers.sequence_serializers import (
+    SequenceSerializer,
+    SequencesSerializer)
 from core.pagination import ListPagination
 
 
 class SequenceView(RetrieveDestroyAPIView):
+    serializer_class = SequenceSerializer
+
     def get(self, request, uuid):
         sequence = Sequence.objects.get(step__uuid=uuid)
         serializer = SequenceSerializer(sequence,

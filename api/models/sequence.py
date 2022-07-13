@@ -11,11 +11,12 @@ class Sequence(models.Model):
     updated = models.DateTimeField(auto_now=True)
     is_published = models.BooleanField(default=False)
     published = models.DateTimeField(null=True)
-    step = models.OneToOneField(Step,
-                                blank=False,
-                                null=False,
-                                on_delete=models.CASCADE,
-                                related_name='step_sequence')
+    step = models.OneToOneField(
+        Step,
+        blank=False,
+        null=False,
+        on_delete=models.CASCADE,
+        related_name='step_sequence')
 
     class Meta:
         db_table = 'sequence'
@@ -25,49 +26,38 @@ class Sequence(models.Model):
         return self.step.uuid
 
 
-class SequenceGuide(models.Model):
-    TEST = 'TST'
-    PREVIEW = 'PRV'
-    PUBLIC = 'PBL'
-    PRIVATE = 'PRV'
-    SPACES_CHOICES = [
-        (TEST, 'test'),
-        (PREVIEW, 'preview'),
-        (PUBLIC, 'public'),
-        (PRIVATE, 'private'),
-    ]
+class PublishedSequence(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    space = models.CharField(
-        max_length=3,
-        choices=SPACES_CHOICES,
-        default=TEST,
-    )
+    published = models.DateTimeField(auto_now_add=True)
     title = models.CharField(max_length=128)
     first = models.UUIDField()
+    sequence = models.ForeignKey(
+        Sequence,
+        blank=False,
+        null=False,
+        on_delete=models.PROTECT,
+        related_name='sequence_published_sequence')
 
-    class Meta:
-        db_table = 'sequence_guide'
 
-
-class SequenceGuideStep(models.Model):
+class PublishedStep(models.Model):
     id = models.AutoField(primary_key=True)
     uuid = models.UUIDField(default=uuid.uuid4)
-    sequence = models.ForeignKey(
-        SequenceGuide,
-        on_delete=models.CASCADE,
-    )
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-    sequence_title = models.CharField(max_length=128, blank=True)
     title = models.CharField(max_length=128)
-    decision_steps = models.CharField(max_length=2048, blank=True)
+
     first = models.UUIDField()
     previous = models.UUIDField(null=True)
     next = models.UUIDField(null=True)
-    content = models.CharField(max_length=4096, blank=True)
 
-    class Meta:
-        db_table = 'sequence_guide_step'
+    published_sequence = models.ForeignKey(
+        PublishedSequence,
+        blank=False,
+        null=False,
+        on_delete=models.PROTECT,
+        related_name='published_step_published_sequence')
+    sequence = models.ForeignKey(
+        Sequence,
+        blank=False,
+        null=False,
+        on_delete=models.PROTECT,
+        related_name='published_step_sequence')

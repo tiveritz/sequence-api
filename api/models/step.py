@@ -43,9 +43,6 @@ class Step(models.Model):
         self.type = type
         self.save()
 
-    class Meta:
-        db_table = 'step'
-
 
 class LinkedStep(models.Model):
     id = models.AutoField(primary_key=True)
@@ -61,6 +58,3 @@ class LinkedStep(models.Model):
                             null=False,
                             on_delete=models.CASCADE,
                             related_name='linked_step_sub')
-
-    class Meta:
-        db_table = 'linked_step'
